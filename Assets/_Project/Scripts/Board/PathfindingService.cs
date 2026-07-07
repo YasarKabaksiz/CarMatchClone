@@ -22,23 +22,26 @@ namespace CarMatchClone.Board
 
         public void RecalculateReachability(Board board)
         {
+            var exitSet = new HashSet<Vector2Int>(board.ExitPositions);
             foreach (var cell in board.GetAllCells())
             {
                 if (cell.Occupant != null)
-                    cell.Occupant.IsReachable = HasPathToExit(cell.Position, board);
+                    cell.Occupant.IsReachable = HasPathToExit(cell.Position, board, exitSet);
             }
         }
 
-        // A* from 'start' to board's virtual Exit position.
-        // Intermediate cells must be walkable (IsWalkable == true).
-        // The starting cell's own walkability is not checked — a car can always leave its own cell.
+        // Dış çağrılar için (ör. ilerideki Booster sistemi)
         public bool HasPathToExit(Vector2Int start, Board board)
         {
-            var exit = board.ExitPosition;
+            return HasPathToExit(start, board, new HashSet<Vector2Int>(board.ExitPositions));
+        }
+
+        private bool HasPathToExit(Vector2Int start, Board board, HashSet<Vector2Int> exitSet)
+        {
             var openList = new List<Node>();
             var closedSet = new HashSet<Vector2Int>();
 
-            openList.Add(new Node(start, 0, ManhattanDistance(start, exit)));
+            openList.Add(new Node(start, 0, MinExitDistance(start, exitSet)));
 
             while (openList.Count > 0)
             {
@@ -56,17 +59,31 @@ namespace CarMatchClone.Board
 
                     if (closedSet.Contains(neighborPos)) continue;
 
-                    if (neighborPos == exit)
+                    if (exitSet.Contains(neighborPos))
                         return true;
 
                     var cell = board.GetCell(neighborPos);
                     if (cell == null || !cell.IsWalkable) continue;
 
-                    openList.Add(new Node(neighborPos, current.G + 1, ManhattanDistance(neighborPos, exit)));
+                    openList.Add(new Node(
+                        neighborPos,
+                        current.G + 1,
+                        MinExitDistance(neighborPos, exitSet)));
                 }
             }
 
             return false;
+        }
+
+        private static int MinExitDistance(Vector2Int pos, HashSet<Vector2Int> exits)
+        {
+            int min = int.MaxValue;
+            foreach (var exit in exits)
+            {
+                int d = ManhattanDistance(pos, exit);
+                if (d < min) min = d;
+            }
+            return min;
         }
 
         private static int GetLowestFIndex(List<Node> list)
