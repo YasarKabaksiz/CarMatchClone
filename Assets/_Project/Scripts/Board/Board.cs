@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using CarMatchClone.Core.Pooling;
 using CarMatchClone.Data;
 using CarMatchClone.Gameplay;
 
@@ -9,6 +10,7 @@ namespace CarMatchClone.Board
     {
         [SerializeField] private LevelData _levelData;
         [SerializeField] private GameObject _carPrefab;
+        [SerializeField] private ObjectPoolManager _poolManager;
 
         private Dictionary<Vector2Int, GridCell> _cells;
         private Vector3 _centerOffset;
@@ -22,7 +24,35 @@ namespace CarMatchClone.Board
                 Debug.LogError("[Board] LevelData atanmamış.");
                 return;
             }
+            if (_poolManager == null)
+            {
+                Debug.LogError("[Board] ObjectPoolManager atanmamış.");
+                return;
+            }
+            WarmUpPool();
             BuildGrid();
+        }
+
+        // LevelLoader'ın Milestone 5'te çağıracağı kalıcı public API.
+        public void RebuildGrid(LevelData levelData)
+        {
+            ReleaseAllCars();
+            _levelData = levelData;
+            BuildGrid();
+        }
+
+        // Inspector sağ tık → "Rebuild Grid (Test)": mevcut LevelData ile grid'i yeniler.
+        // Level geçiş senaryosunu LevelLoader olmadan test etmek için.
+        [ContextMenu("Rebuild Grid (Test)")]
+        private void RebuildGridTest() => RebuildGrid(_levelData);
+
+        private void WarmUpPool()
+        {
+            int carCount = 0;
+            foreach (var entry in _levelData.cells)
+                if (entry.type == CellType.CarSlot) carCount++;
+
+            _poolManager.WarmUp(_carPrefab, carCount);
         }
 
         private void BuildGrid()
@@ -39,7 +69,11 @@ namespace CarMatchClone.Board
                 if (entry.type == CellType.CarSlot)
                 {
                     Vector3 worldPos = GridToWorld(entry.position);
-                    GameObject carObj = Instantiate(_carPrefab, worldPos, Quaternion.identity, transform);
+
+                    GameObject carObj = _poolManager.Get(_carPrefab);
+                    carObj.transform.SetPositionAndRotation(worldPos, Quaternion.identity);
+                    carObj.transform.SetParent(transform);
+                    carObj.SetActive(true);
                     carObj.name = $"Car_{entry.position.x}_{entry.position.y}";
 
                     var car = carObj.GetComponent<Car>();
@@ -50,6 +84,17 @@ namespace CarMatchClone.Board
                     cell.Occupant = car;
                 }
             }
+        }
+
+        private void ReleaseAllCars()
+        {
+            if (_cells == null) return;
+            foreach (var cell in _cells.Values)
+            {
+                if (cell.Occupant != null)
+                    _poolManager.Release(_carPrefab, cell.Occupant.gameObject);
+            }
+            _cells.Clear();
         }
 
         public GridCell GetCell(int x, int y) => GetCell(new Vector2Int(x, y));
@@ -84,7 +129,6 @@ namespace CarMatchClone.Board
                 pos.y * s - _centerOffset.z);
         }
 
-        // Bounding-box ortası: arbitrary şekiller için genel centering.
         private Vector3 ComputeCenterOffset()
         {
             if (_levelData.cells == null || _levelData.cells.Length == 0)

@@ -19,6 +19,7 @@ namespace CarMatchClone.Core
         }
 
         // Level geçişlerinde dışarıdan tekrar çağrılabilir.
+        [ContextMenu("Frame Board")]
         public void FrameBoard()
         {
             Bounds bounds = _board.GetWorldBounds();

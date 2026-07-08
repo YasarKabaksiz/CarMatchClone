@@ -175,6 +175,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -300,6 +301,22 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb9548f4432792542a07823a192d8c50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.CameraController
+  _board: {fileID: 551604615}
+  _camera: {fileID: 330585545}
+  _tiltAngle: 65
+  _padding: 1.5
 --- !u!1 &399198636
 GameObject:
   m_ObjectHideFlags: 0
@@ -516,8 +533,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 842f0661d71ee7e4ebb1e4f7eab2307f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Board.Board
-  _levelData: {fileID: 11400000, guid: 4f2ff9a66dd62f24f8908233b21fa25e, type: 2}
+  _levelData: {fileID: 11400000, guid: 10af6d362f32c484bb0880997f10cfd0, type: 2}
   _carPrefab: {fileID: 1720168925863219082, guid: cae6923aeeb95b4409fa9d2ee17bf193, type: 3}
+  _poolManager: {fileID: 670052067}
+--- !u!1 &670052066
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 670052068}
+  - component: {fileID: 670052067}
+  m_Layer: 0
+  m_Name: ObjectPoolManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &670052067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670052066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 438c69d087959ec4da7428c1638fc163, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.Pooling.ObjectPoolManager
+--- !u!4 &670052068
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670052066}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.10303, y: -0, z: -0.29698}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -723,3 +785,4 @@ SceneRoots:
   - {fileID: 399198637}
   - {fileID: 1910141175}
   - {fileID: 1670938171}
+  - {fileID: 670052068}
