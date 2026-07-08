@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using CarMatchClone.Core.Events;
 
 namespace CarMatchClone.Board
 {
     public class PathfindingService : MonoBehaviour
     {
         [SerializeField] private Board _board;
+        [SerializeField] private CellEventChannel _onCellVacatedChannel;
+        [SerializeField] private bool _debugLogging;
 
         private static readonly Vector2Int[] _directions =
         {
@@ -17,16 +20,51 @@ namespace CarMatchClone.Board
 
         private void Start()
         {
+            if (_board == null) { Debug.LogError("[PathfindingService] Board referansı atanmamış."); return; }
+            RecalculateReachability(_board);
+        }
+
+        private void OnEnable()
+        {
+            if (_onCellVacatedChannel == null)
+            {
+                Debug.LogWarning("[PathfindingService] OnCellVacatedChannel atanmamış — dinamik güncelleme çalışmaz.");
+                return;
+            }
+            _onCellVacatedChannel.Subscribe(HandleCellVacated);
+        }
+
+        private void OnDisable()
+        {
+            _onCellVacatedChannel?.Unsubscribe(HandleCellVacated);
+        }
+
+        private void HandleCellVacated(GridCell cell)
+        {
             RecalculateReachability(_board);
         }
 
         public void RecalculateReachability(Board board)
         {
             var exitSet = new HashSet<Vector2Int>(board.ExitPositions);
+
+            if (_debugLogging)
+            {
+                var walkLog = new System.Text.StringBuilder("[PathfindingService] Walkability: ");
+                foreach (var cell in board.GetAllCells())
+                    walkLog.Append($"({cell.Position.x},{cell.Position.y})={cell.IsWalkable}  ");
+                Debug.Log(walkLog.ToString());
+            }
+
             foreach (var cell in board.GetAllCells())
             {
                 if (cell.Occupant != null)
-                    cell.Occupant.IsReachable = HasPathToExit(cell.Position, board, exitSet);
+                {
+                    bool reachable = HasPathToExit(cell.Position, board, exitSet);
+                    cell.Occupant.IsReachable = reachable;
+                    if (_debugLogging)
+                        Debug.Log($"[PathfindingService] {cell.Position} → IsReachable: {reachable}");
+                }
             }
         }
 

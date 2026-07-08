@@ -11,6 +11,7 @@ namespace CarMatchClone.Data
         {
             public Vector2Int position;
             public CellType type;
+            public CarColor color;
         }
 
         public CellEntry[] cells;

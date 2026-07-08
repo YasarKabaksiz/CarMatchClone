@@ -25,7 +25,6 @@ namespace CarMatchClone.Core.Pooling
                 obj.SetActive(false);
                 _queue.Enqueue(obj);
             }
-            Debug.Log($"[Pool:{_prefab.name}] WarmUp tamamlandı — {count} obje önceden oluşturuldu, kuyruk: {_queue.Count}");
         }
 
         // Kuyrukta bekleyen varsa döndürür; yoksa yeni Instantiate eder.
@@ -35,7 +34,6 @@ namespace CarMatchClone.Core.Pooling
             if (_queue.Count > 0)
             {
                 var obj = _queue.Dequeue();
-                Debug.Log($"[Pool:{_prefab.name}] GET — pool'dan alındı. Kalan kuyruk: {_queue.Count}");
                 return obj;
             }
 
@@ -49,7 +47,6 @@ namespace CarMatchClone.Core.Pooling
             obj.SetActive(false);
             obj.transform.SetParent(_container);
             _queue.Enqueue(obj);
-            Debug.Log($"[Pool:{_prefab.name}] RELEASE — kuyruk: {_queue.Count}");
         }
     }
 }

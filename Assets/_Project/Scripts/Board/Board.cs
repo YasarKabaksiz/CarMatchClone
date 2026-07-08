@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using CarMatchClone.Core.Events;
 using CarMatchClone.Core.Pooling;
 using CarMatchClone.Data;
 using CarMatchClone.Gameplay;
@@ -11,6 +12,9 @@ namespace CarMatchClone.Board
         [SerializeField] private LevelData _levelData;
         [SerializeField] private GameObject _carPrefab;
         [SerializeField] private ObjectPoolManager _poolManager;
+        [SerializeField] private CarEventChannel _onCarSelectedChannel;
+        [SerializeField] private CellEventChannel _onCellVacatedChannel;
+        [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
 
         private Dictionary<Vector2Int, GridCell> _cells;
         private Vector3 _centerOffset;
@@ -33,6 +37,42 @@ namespace CarMatchClone.Board
             BuildGrid();
         }
 
+        private void OnEnable()
+        {
+            if (_onCarSelectedChannel == null)
+            {
+                Debug.LogWarning("[Board] OnCarSelectedChannel atanmamış — araç seçimi çalışmaz.");
+                return;
+            }
+            _onCarSelectedChannel.Subscribe(HandleCarSelected);
+        }
+
+        private void OnDisable()
+        {
+            _onCarSelectedChannel?.Unsubscribe(HandleCarSelected);
+        }
+
+        private void HandleCarSelected(Car car)
+        {
+            var cell = GetCell(car.GridPosition);
+            if (cell == null) return;
+
+            cell.Occupant = null;
+            cell.IsWalkable = true;
+
+            _onCellVacatedChannel.Raise(cell);
+
+            if (IsBoardEmpty())
+                _onLevelCompleteChannel.Raise();
+        }
+
+        private bool IsBoardEmpty()
+        {
+            foreach (var cell in _cells.Values)
+                if (cell.Occupant != null) return false;
+            return true;
+        }
+
         // LevelLoader'ın Milestone 5'te çağıracağı kalıcı public API.
         public void RebuildGrid(LevelData levelData)
         {
@@ -42,7 +82,6 @@ namespace CarMatchClone.Board
         }
 
         // Inspector sağ tık → "Rebuild Grid (Test)": mevcut LevelData ile grid'i yeniler.
-        // Level geçiş senaryosunu LevelLoader olmadan test etmek için.
         [ContextMenu("Rebuild Grid (Test)")]
         private void RebuildGridTest() => RebuildGrid(_levelData);
 
@@ -81,6 +120,7 @@ namespace CarMatchClone.Board
                         car = carObj.AddComponent<Car>();
 
                     car.GridPosition = entry.position;
+                    car.Color = entry.color;
                     cell.Occupant = car;
                 }
             }

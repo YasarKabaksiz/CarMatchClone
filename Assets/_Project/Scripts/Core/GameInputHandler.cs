@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using CarMatchClone.Core.Events;
 using CarMatchClone.Gameplay;
 
 namespace CarMatchClone.Core
 {
     public class GameInputHandler : MonoBehaviour
     {
+        [SerializeField] private CarEventChannel _onCarSelectedChannel;
+
         private InputAction _clickAction;
 
         private void OnEnable()
@@ -30,8 +33,8 @@ namespace CarMatchClone.Core
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 var car = hit.collider.GetComponent<Car>();
-                if (car != null)
-                    Debug.Log($"[Input] Car at {car.GridPosition} — reachable: {car.IsReachable}");
+                if (car != null && car.IsReachable)
+                    _onCarSelectedChannel.Raise(car);
             }
         }
     }
