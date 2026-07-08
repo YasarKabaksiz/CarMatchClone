@@ -24,8 +24,11 @@ namespace CarMatchClone.Board
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
 
+        [SerializeField] private GameObject _wallPrefab;
+
         private Dictionary<Vector2Int, GridCell> _cells;
         private Dictionary<CarColor, GameObject> _prefabByColor;
+        private List<GameObject> _wallObjects = new List<GameObject>();
         private Vector3 _centerOffset;
 
         private const int BoardWidth = 7;
@@ -99,6 +102,7 @@ namespace CarMatchClone.Board
         public void RebuildGrid(LevelData levelData)
         {
             ReleaseAllCars();
+            DestroyWalls();
             _levelData = levelData;
             BuildPrefabLookup();
             WarmUpPool();
@@ -145,6 +149,13 @@ namespace CarMatchClone.Board
                 var cell = new GridCell(entry.position, isWalkable: walkable);
                 _cells[entry.position] = cell;
 
+                if (entry.type == CellType.Wall && _wallPrefab != null)
+                {
+                    var wall = Instantiate(_wallPrefab, GridToWorld(entry.position), Quaternion.identity, transform);
+                    wall.name = $"Wall_{entry.position.x}_{entry.position.y}";
+                    _wallObjects.Add(wall);
+                }
+
                 if (entry.type == CellType.CarSlot)
                 {
                     if (!_prefabByColor.TryGetValue(entry.color, out var prefab))
@@ -181,6 +192,13 @@ namespace CarMatchClone.Board
                     _poolManager.Release(cell.Occupant.SourcePrefab, cell.Occupant.gameObject);
             }
             _cells.Clear();
+        }
+
+        private void DestroyWalls()
+        {
+            foreach (var wall in _wallObjects)
+                if (wall != null) Destroy(wall);
+            _wallObjects.Clear();
         }
 
         public GridCell GetCell(int x, int y) => GetCell(new Vector2Int(x, y));
