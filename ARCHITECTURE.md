@@ -294,6 +294,7 @@ Core/Pooling/
 9. UI/UX (ana menü, level haritası, popup'lar)
 10. Monetizasyon + Analytics entegrasyonu
 11. Polish (ses, VFX, haptic)
+    - **TODO (M4B'den):** Holder entry point sabit; araç entry noktasından gerçek slot pozisyonuna kısa bir instant snap oluyor. Düzeltme: CarMover'ın tween bitmeden önce Holder'dan hedef slot Transform'unu event-based sorgulayabilmesi (slot pozisyonu dinamik olarak döndürülür). Milestone 11 Polish kapsamında ele alınacak.
 
 **Kural:** Bir milestone tamamlanmadan sonrakine geçilmez. Her milestone sonunda test edilir, çalıştığı doğrulanır, ayrı bir Git commit ile kaydedilir.
 

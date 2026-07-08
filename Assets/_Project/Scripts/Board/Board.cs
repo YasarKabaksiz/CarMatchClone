@@ -160,7 +160,7 @@ namespace CarMatchClone.Board
             return bounds;
         }
 
-        private Vector3 GridToWorld(Vector2Int pos)
+        public Vector3 GridToWorld(Vector2Int pos)
         {
             float s = _levelData.cellSize;
             return transform.position + new Vector3(

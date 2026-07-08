@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 9019845485192889714}
   - component: {fileID: 2629782422991581945}
   - component: {fileID: 6297419360127688196}
+  - component: {fileID: 6808709295011339715}
   m_Layer: 0
   m_Name: CarPlaceholder
   m_TagString: Untagged
@@ -125,3 +126,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d53ca8c29f38dc144bdc8fdf9bff2873, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.Car
+--- !u!114 &6808709295011339715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1720168925863219082}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45ffd28df4e15924593f2a1d199933fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.CarMover
+  _stepDuration: 0.2
+  _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}

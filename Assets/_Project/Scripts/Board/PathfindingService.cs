@@ -74,6 +74,57 @@ namespace CarMatchClone.Board
             return HasPathToExit(start, board, new HashSet<Vector2Int>(board.ExitPositions));
         }
 
+        // CarMover'ın tween için kullandığı path: başlangıç HARİÇ, exit DAHİL.
+        public List<Vector2Int> GetPathToExit(Vector2Int start, Board board)
+        {
+            var exitSet = new HashSet<Vector2Int>(board.ExitPositions);
+            var openList = new List<Node>();
+            var closedSet = new HashSet<Vector2Int>();
+
+            openList.Add(new Node(start, 0, MinExitDistance(start, exitSet), null));
+
+            while (openList.Count > 0)
+            {
+                int bestIndex = GetLowestFIndex(openList);
+                var current = openList[bestIndex];
+                openList.RemoveAt(bestIndex);
+
+                if (closedSet.Contains(current.Position))
+                    continue;
+                closedSet.Add(current.Position);
+
+                foreach (var dir in _directions)
+                {
+                    var neighborPos = current.Position + dir;
+                    if (closedSet.Contains(neighborPos)) continue;
+
+                    if (exitSet.Contains(neighborPos))
+                    {
+                        var path = new List<Vector2Int> { neighborPos };
+                        var node = current;
+                        while (node.Parent != null)
+                        {
+                            path.Add(node.Position);
+                            node = node.Parent;
+                        }
+                        path.Reverse();
+                        return path;
+                    }
+
+                    var cell = board.GetCell(neighborPos);
+                    if (cell == null || !cell.IsWalkable) continue;
+
+                    openList.Add(new Node(
+                        neighborPos,
+                        current.G + 1,
+                        MinExitDistance(neighborPos, exitSet),
+                        current));
+                }
+            }
+
+            return null;
+        }
+
         private bool HasPathToExit(Vector2Int start, Board board, HashSet<Vector2Int> exitSet)
         {
             var openList = new List<Node>();
@@ -145,12 +196,14 @@ namespace CarMatchClone.Board
             public readonly int G;
             public readonly int H;
             public int F => G + H;
+            public readonly Node Parent;
 
-            public Node(Vector2Int position, int g, int h)
+            public Node(Vector2Int position, int g, int h, Node parent = null)
             {
                 Position = position;
                 G = g;
                 H = h;
+                Parent = parent;
             }
         }
     }

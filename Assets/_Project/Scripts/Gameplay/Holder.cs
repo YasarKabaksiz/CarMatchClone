@@ -9,7 +9,8 @@ namespace CarMatchClone.Gameplay
     {
         [SerializeField] private int _maxSlots = 7;
         [SerializeField] private Transform[] _slotTransforms;
-        [SerializeField] private CarEventChannel _onCarSelectedChannel;
+        [SerializeField] private Transform _entryPoint;
+        [SerializeField] private CarEventChannel _onCarReachedHolderChannel;
         [SerializeField] private ColorEventChannel _onMatchOccurredChannel;
         [SerializeField] private VoidEventChannel _onHolderFullChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
@@ -37,15 +38,15 @@ namespace CarMatchClone.Gameplay
 
         private void OnEnable()
         {
-            _onCarSelectedChannel.Subscribe(HandleCarSelected);
+            _onCarReachedHolderChannel.Subscribe(HandleCarReachedHolder);
         }
 
         private void OnDisable()
         {
-            _onCarSelectedChannel.Unsubscribe(HandleCarSelected);
+            _onCarReachedHolderChannel.Unsubscribe(HandleCarReachedHolder);
         }
 
-        private void HandleCarSelected(Car car)
+        private void HandleCarReachedHolder(Car car)
         {
             if (IsFull)
             {

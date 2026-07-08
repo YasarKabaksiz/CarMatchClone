@@ -165,6 +165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.GameInputHandler
   _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
 --- !u!114 &11102827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -297,13 +298,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
-  m_LocalPosition: {x: 0, y: 10, z: -5}
+  m_LocalRotation: {x: 0.5735764, y: 0, z: 0, w: 0.8191521}
+  m_LocalPosition: {x: 0, y: 12, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 70, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,6 +411,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Board.PathfindingService
   _board: {fileID: 551604615}
   _onCellVacatedChannel: {fileID: 11400000, guid: 745a464abe0bb99459673f17fc44670a, type: 2}
+  _debugLogging: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -943,7 +945,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.4809481, y: 1.4808, z: 1.4808}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1039,7 +1041,7 @@ MonoBehaviour:
   - {fileID: 784596399}
   - {fileID: 1431188955}
   - {fileID: 74375659}
-  _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
   _onMatchOccurredChannel: {fileID: 11400000, guid: 1e920084f4019dd4897dbe1f93aae656, type: 2}
   _onHolderFullChannel: {fileID: 11400000, guid: e547e0847f55c5a49b4c95eeaa95b3fd, type: 2}
   _onGameOverChannel: {fileID: 11400000, guid: eee5c3719b03b574297a7e5fad7b95e6, type: 2}
