@@ -29,12 +29,17 @@ namespace CarMatchClone.Gameplay
 
         private void OnEnable()
         {
+            if (_onCarSelectedChannel == null)
+            {
+                Debug.LogError($"[CarMover] OnCarSelectedChannel atanmamış — {gameObject.name} hareket etmez.");
+                return;
+            }
             _onCarSelectedChannel.Subscribe(HandleCarSelected);
         }
 
         private void OnDisable()
         {
-            _onCarSelectedChannel.Unsubscribe(HandleCarSelected);
+            _onCarSelectedChannel?.Unsubscribe(HandleCarSelected);
         }
 
         private void HandleCarSelected(Car car)

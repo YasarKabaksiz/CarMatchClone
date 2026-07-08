@@ -28,6 +28,8 @@ Bu doküman, projenin teknik anayasasıdır. Claude Code (veya başka bir geliş
 ```
 Assets/
   _Project/
+    Editor/                        ← sadece Unity Editor'de derlenir, build'e girmez
+      LevelEditorWindow.cs
     Scripts/
       Core/
         GameManager.cs

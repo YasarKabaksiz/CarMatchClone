@@ -28,7 +28,17 @@ namespace CarMatchClone.Board
         private Dictionary<CarColor, GameObject> _prefabByColor;
         private Vector3 _centerOffset;
 
-        public Vector2Int[] ExitPositions => _levelData.exitPositions;
+        private const int BoardWidth = 7;
+        private static readonly Vector2Int[] _exitPositions = BuildExitPositions();
+        public Vector2Int[] ExitPositions => _exitPositions;
+
+        private static Vector2Int[] BuildExitPositions()
+        {
+            var exits = new Vector2Int[BoardWidth];
+            for (int x = 0; x < BoardWidth; x++)
+                exits[x] = new Vector2Int(x, -1);
+            return exits;
+        }
 
         private void Awake()
         {

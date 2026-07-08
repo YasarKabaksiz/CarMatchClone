@@ -15,7 +15,6 @@ namespace CarMatchClone.Data
         }
 
         public CellEntry[] cells;
-        public Vector2Int[] exitPositions;
         public float cellSize = 1.5f;
 
         private void OnValidate()

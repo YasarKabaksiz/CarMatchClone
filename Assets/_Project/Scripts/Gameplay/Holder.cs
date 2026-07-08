@@ -47,6 +47,8 @@ namespace CarMatchClone.Gameplay
 
         private void HandleCarReachedHolder(Car car)
         {
+            car.IsReachable = false;
+
             if (IsFull)
             {
                 _onHolderFullChannel.Raise();
