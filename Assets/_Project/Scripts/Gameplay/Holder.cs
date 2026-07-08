@@ -15,7 +15,6 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private VoidEventChannel _onHolderFullChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
-        [SerializeField] private GameObject _carPrefab;
 
         private Car[] _slots;
 
@@ -114,7 +113,7 @@ namespace CarMatchClone.Gameplay
                 CarColor color = _slots[matchStart].Color;
                 for (int i = matchStart; i < matchStart + 3; i++)
                 {
-                    _poolManager.Release(_carPrefab, _slots[i].gameObject);
+                    _poolManager.Release(_slots[i].SourcePrefab, _slots[i].gameObject);
                     _slots[i] = null;
                 }
                 CompactSlots();

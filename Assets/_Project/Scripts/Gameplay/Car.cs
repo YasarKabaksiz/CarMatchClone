@@ -8,5 +8,6 @@ namespace CarMatchClone.Gameplay
         public Vector2Int GridPosition { get; set; }
         public bool IsReachable { get; set; }
         public CarColor Color { get; set; }
+        public GameObject SourcePrefab { get; set; }
     }
 }

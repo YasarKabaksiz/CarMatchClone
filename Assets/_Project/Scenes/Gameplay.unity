@@ -180,6 +180,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.GameManager
   _onGameOverChannel: {fileID: 11400000, guid: eee5c3719b03b574297a7e5fad7b95e6, type: 2}
   _onLevelCompleteChannel: {fileID: 11400000, guid: 153964fee8aeabf40b3c2d78f1a8d91c, type: 2}
+--- !u!1 &46033766
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 46033767}
+  - component: {fileID: 46033768}
+  m_Layer: 0
+  m_Name: HolderEntryPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &46033767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46033766}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.5, y: 0, z: -3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1910141175}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &46033768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46033766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 889ec696976749441ac3fa54de48172b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.HolderEntryPoint
 --- !u!1 &74375658
 GameObject:
   m_ObjectHideFlags: 0
@@ -1018,6 +1062,7 @@ Transform:
   - {fileID: 784596399}
   - {fileID: 1431188955}
   - {fileID: 74375659}
+  - {fileID: 46033767}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1910141176
@@ -1041,6 +1086,7 @@ MonoBehaviour:
   - {fileID: 784596399}
   - {fileID: 1431188955}
   - {fileID: 74375659}
+  _entryPoint: {fileID: 46033767}
   _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
   _onMatchOccurredChannel: {fileID: 11400000, guid: 1e920084f4019dd4897dbe1f93aae656, type: 2}
   _onHolderFullChannel: {fileID: 11400000, guid: e547e0847f55c5a49b4c95eeaa95b3fd, type: 2}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CarMatchClone.Core.Events;
@@ -9,14 +10,22 @@ namespace CarMatchClone.Board
 {
     public class Board : MonoBehaviour
     {
+        [Serializable]
+        private struct CarPrefabEntry
+        {
+            public CarColor color;
+            public GameObject prefab;
+        }
+
         [SerializeField] private LevelData _levelData;
-        [SerializeField] private GameObject _carPrefab;
+        [SerializeField] private CarPrefabEntry[] _carPrefabs;
         [SerializeField] private ObjectPoolManager _poolManager;
         [SerializeField] private CarEventChannel _onCarSelectedChannel;
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
 
         private Dictionary<Vector2Int, GridCell> _cells;
+        private Dictionary<CarColor, GameObject> _prefabByColor;
         private Vector3 _centerOffset;
 
         public Vector2Int[] ExitPositions => _levelData.exitPositions;
@@ -33,6 +42,7 @@ namespace CarMatchClone.Board
                 Debug.LogError("[Board] ObjectPoolManager atanmamış.");
                 return;
             }
+            BuildPrefabLookup();
             WarmUpPool();
             BuildGrid();
         }
@@ -78,6 +88,8 @@ namespace CarMatchClone.Board
         {
             ReleaseAllCars();
             _levelData = levelData;
+            BuildPrefabLookup();
+            WarmUpPool();
             BuildGrid();
         }
 
@@ -85,13 +97,29 @@ namespace CarMatchClone.Board
         [ContextMenu("Rebuild Grid (Test)")]
         private void RebuildGridTest() => RebuildGrid(_levelData);
 
+        private void BuildPrefabLookup()
+        {
+            _prefabByColor = new Dictionary<CarColor, GameObject>();
+            foreach (var entry in _carPrefabs)
+                _prefabByColor[entry.color] = entry.prefab;
+        }
+
         private void WarmUpPool()
         {
-            int carCount = 0;
+            var countByColor = new Dictionary<CarColor, int>();
             foreach (var entry in _levelData.cells)
-                if (entry.type == CellType.CarSlot) carCount++;
+            {
+                if (entry.type != CellType.CarSlot) continue;
+                if (!countByColor.ContainsKey(entry.color))
+                    countByColor[entry.color] = 0;
+                countByColor[entry.color]++;
+            }
 
-            _poolManager.WarmUp(_carPrefab, carCount);
+            foreach (var entry in _carPrefabs)
+            {
+                if (countByColor.TryGetValue(entry.color, out int count))
+                    _poolManager.WarmUp(entry.prefab, count);
+            }
         }
 
         private void BuildGrid()
@@ -107,9 +135,14 @@ namespace CarMatchClone.Board
 
                 if (entry.type == CellType.CarSlot)
                 {
-                    Vector3 worldPos = GridToWorld(entry.position);
+                    if (!_prefabByColor.TryGetValue(entry.color, out var prefab))
+                    {
+                        Debug.LogError($"[Board] {entry.color} rengi için prefab atanmamış.");
+                        continue;
+                    }
 
-                    GameObject carObj = _poolManager.Get(_carPrefab);
+                    Vector3 worldPos = GridToWorld(entry.position);
+                    GameObject carObj = _poolManager.Get(prefab);
                     carObj.transform.SetPositionAndRotation(worldPos, Quaternion.identity);
                     carObj.transform.SetParent(transform);
                     carObj.SetActive(true);
@@ -121,6 +154,7 @@ namespace CarMatchClone.Board
 
                     car.GridPosition = entry.position;
                     car.Color = entry.color;
+                    car.SourcePrefab = prefab;
                     cell.Occupant = car;
                 }
             }
@@ -132,7 +166,7 @@ namespace CarMatchClone.Board
             foreach (var cell in _cells.Values)
             {
                 if (cell.Occupant != null)
-                    _poolManager.Release(_carPrefab, cell.Occupant.gameObject);
+                    _poolManager.Release(cell.Occupant.SourcePrefab, cell.Occupant.gameObject);
             }
             _cells.Clear();
         }

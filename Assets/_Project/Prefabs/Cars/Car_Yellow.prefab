@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 6297419360127688196}
   - component: {fileID: 6808709295011339715}
   m_Layer: 0
-  m_Name: CarPlaceholder
+  m_Name: Car_Yellow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.5, z: 1.5}
+  m_LocalScale: {x: 1, y: 0.5, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -69,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 78b42b30ea6aba649a5e59c044bb9816, type: 2}
+  - {fileID: 2100000, guid: b15003ab51c2dd74d856b42754b75a83, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
