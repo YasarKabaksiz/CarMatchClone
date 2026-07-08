@@ -38,7 +38,7 @@ Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı collector/matching türü). De
 
 - **Naming:** PascalCase (class, method, public field), camelCase (private field, local variable). Private field'larda `_` prefix kullan (`_currentState` gibi).
 - **Dosya = Sınıf:** Her `.cs` dosyasında tek bir public sınıf/interface olsun (dosya adıyla aynı isimde).
-- **Namespace:** `CarMatchClone.Core`, `CarMatchClone.Board`, `CarMatchClone.Gameplay` gibi klasör yapısına paralel namespace kullan.
+- **Namespace:** `CarMatchClone.Core`, `CarMatchClone.Board`, `CarMatchClone.Gameplay` gibi klasör yapısına paralel namespace kullan. **Not:** `CarMatchClone.Board` namespace'i ile `Board` sınıfı aynı isimde. `CarMatchClone.Core` gibi kardeş namespace içinden erişirken alias çalışmıyor (compiler namespace'i kazanıyor); bu durumlarda `CarMatchClone.Board.Board` tam nitelikli ismini kullan.
 - **Yorum satırları Türkçe veya İngilizce olabilir**, ama tutarlı ol — bir dosyada karışık kullanma.
 - **Magic number yok.** Sabitler `const` veya `[SerializeField]` ile isimlendirilmiş alanlar olarak tanımlansın.
 

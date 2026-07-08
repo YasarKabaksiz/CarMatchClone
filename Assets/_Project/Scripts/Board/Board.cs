@@ -59,6 +59,22 @@ namespace CarMatchClone.Board
 
         public IEnumerable<GridCell> GetAllCells() => _cells.Values;
 
+        public Bounds GetWorldBounds()
+        {
+            if (_cells == null || _cells.Count == 0)
+                return new Bounds(transform.position, Vector3.zero);
+
+            bool first = true;
+            Bounds bounds = default;
+            foreach (var pos in _cells.Keys)
+            {
+                Vector3 worldPos = GridToWorld(pos);
+                if (first) { bounds = new Bounds(worldPos, Vector3.zero); first = false; }
+                else bounds.Encapsulate(worldPos);
+            }
+            return bounds;
+        }
+
         private Vector3 GridToWorld(Vector2Int pos)
         {
             float s = _levelData.cellSize;
