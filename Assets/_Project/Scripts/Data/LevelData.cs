@@ -17,5 +17,11 @@ namespace CarMatchClone.Data
         public CellEntry[] cells;
         public Vector2Int[] exitPositions;
         public float cellSize = 1.5f;
+
+        private void OnValidate()
+        {
+            if (cells != null && cells.Length != 0 && cells.Length != 56)
+                Debug.LogWarning($"[LevelData] 56 hücre bekleniyor, {cells.Length} var — {name}");
+        }
     }
 }

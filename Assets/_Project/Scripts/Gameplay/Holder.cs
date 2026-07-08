@@ -142,5 +142,15 @@ namespace CarMatchClone.Gameplay
                     _slots[i].transform.position = _slotTransforms[i].position;
             }
         }
+
+        public Bounds GetBounds()
+        {
+            if (_slotTransforms == null || _slotTransforms.Length == 0)
+                return new Bounds(transform.position, Vector3.zero);
+            var b = new Bounds(_slotTransforms[0].position, Vector3.zero);
+            for (int i = 1; i < _slotTransforms.Length; i++)
+                b.Encapsulate(_slotTransforms[i].position);
+            return b;
+        }
     }
 }

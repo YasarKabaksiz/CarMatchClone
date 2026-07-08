@@ -42,6 +42,8 @@ namespace CarMatchClone.Board
                 Debug.LogError("[Board] ObjectPoolManager atanmamış.");
                 return;
             }
+            if (_levelData.cells.Length != 56)
+                Debug.LogWarning($"[Board] LevelData 56 hücre içermeli, {_levelData.cells.Length} var — {_levelData.name}");
             BuildPrefabLookup();
             WarmUpPool();
             BuildGrid();

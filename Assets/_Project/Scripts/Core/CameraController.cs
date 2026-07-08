@@ -1,10 +1,12 @@
 using UnityEngine;
+using CarMatchClone.Gameplay;
 
 namespace CarMatchClone.Core
 {
     public class CameraController : MonoBehaviour
     {
         [SerializeField] private CarMatchClone.Board.Board _board;
+        [SerializeField] private Holder _holder;
         [SerializeField] private Camera _camera;
 
         // Yataydan ölçülen açı: 90° = tam dikey, 65° = hafif öne eğik
@@ -23,12 +25,14 @@ namespace CarMatchClone.Core
         public void FrameBoard()
         {
             Bounds bounds = _board.GetWorldBounds();
+            if (_holder != null)
+                bounds.Encapsulate(_holder.GetBounds());
 
             float tiltRad    = _tiltAngle * Mathf.Deg2Rad;
             float halfFovRad = _camera.fieldOfView * 0.5f * Mathf.Deg2Rad;
             float tanHalfFov = Mathf.Tan(halfFovRad);
 
-            // Board'un Z boyutu, kameranın dikey eksenine sin(tilt) oranında yansır.
+            // Toplam alanın Z boyutu, kameranın dikey eksenine sin(tilt) oranında yansır.
             float verticalFit   = (bounds.extents.z * Mathf.Sin(tiltRad) + _padding) / tanHalfFov;
             float horizontalFit = (bounds.extents.x + _padding) / (tanHalfFov * _camera.aspect);
             float D = Mathf.Max(verticalFit, horizontalFit);
