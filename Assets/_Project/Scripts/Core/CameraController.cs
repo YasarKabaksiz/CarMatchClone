@@ -11,7 +11,10 @@ namespace CarMatchClone.Core
 
         // Yataydan ölçülen açı: 90° = tam dikey, 65° = hafif öne eğik
         [SerializeField][Range(30f, 90f)] private float _tiltAngle = 65f;
-        [SerializeField] private float _padding = 1.5f;
+        [SerializeField] private float _padding = 0.3f;
+        // Pozitif → kamera aşağı kayar (board yukarı, holder küçülür).
+        // Negatif → kamera yukarı kayar (holder büyür, board küçülür).
+        [SerializeField] private float _verticalBias = 0f;
 
         private void Start()
         {
@@ -37,7 +40,7 @@ namespace CarMatchClone.Core
             float horizontalFit = (bounds.extents.x + _padding) / (tanHalfFov * _camera.aspect);
             float D = Mathf.Max(verticalFit, horizontalFit);
 
-            Vector3 center = bounds.center;
+            Vector3 center = bounds.center + new Vector3(0f, 0f, _verticalBias);
             _camera.transform.SetPositionAndRotation(
                 new Vector3(
                     center.x,

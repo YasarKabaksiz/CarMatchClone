@@ -14,47 +14,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Data.LevelData
   cells:
   - position: {x: 0, y: 0}
-    type: 2
-    color: 0
+    type: 0
+    color: 5
   - position: {x: 1, y: 0}
-    type: 2
+    type: 1
     color: 0
   - position: {x: 2, y: 0}
-    type: 1
-    color: 0
+    type: 0
+    color: 1
   - position: {x: 3, y: 0}
-    type: 1
-    color: 0
+    type: 0
+    color: 1
   - position: {x: 4, y: 0}
     type: 0
-    color: 3
+    color: 2
   - position: {x: 5, y: 0}
-    type: 2
+    type: 1
     color: 0
   - position: {x: 6, y: 0}
-    type: 2
-    color: 0
+    type: 0
+    color: 5
   - position: {x: 0, y: 1}
     type: 2
     color: 0
   - position: {x: 1, y: 1}
-    type: 2
+    type: 1
     color: 0
   - position: {x: 2, y: 1}
     type: 0
-    color: 1
+    color: 5
   - position: {x: 3, y: 1}
     type: 0
-    color: 4
+    color: 2
   - position: {x: 4, y: 1}
     type: 0
-    color: 5
+    color: 2
   - position: {x: 5, y: 1}
-    type: 2
+    type: 1
     color: 0
   - position: {x: 6, y: 1}
-    type: 2
-    color: 0
+    type: 0
+    color: 4
   - position: {x: 0, y: 2}
     type: 2
     color: 0
@@ -62,20 +62,20 @@ MonoBehaviour:
     type: 2
     color: 0
   - position: {x: 2, y: 2}
-    type: 0
-    color: 1
+    type: 1
+    color: 0
   - position: {x: 3, y: 2}
     type: 0
-    color: 4
+    color: 1
   - position: {x: 4, y: 2}
     type: 0
-    color: 5
+    color: 4
   - position: {x: 5, y: 2}
-    type: 2
-    color: 0
+    type: 0
+    color: 3
   - position: {x: 6, y: 2}
-    type: 2
-    color: 0
+    type: 0
+    color: 4
   - position: {x: 0, y: 3}
     type: 2
     color: 0
@@ -83,20 +83,20 @@ MonoBehaviour:
     type: 2
     color: 0
   - position: {x: 2, y: 3}
+    type: 0
+    color: 4
+  - position: {x: 3, y: 3}
     type: 2
     color: 0
-  - position: {x: 3, y: 3}
-    type: 0
-    color: 3
   - position: {x: 4, y: 3}
     type: 0
-    color: 3
+    color: 4
   - position: {x: 5, y: 3}
-    type: 2
-    color: 0
+    type: 0
+    color: 3
   - position: {x: 6, y: 3}
-    type: 2
-    color: 0
+    type: 0
+    color: 3
   - position: {x: 0, y: 4}
     type: 2
     color: 0
@@ -104,14 +104,14 @@ MonoBehaviour:
     type: 2
     color: 0
   - position: {x: 2, y: 4}
-    type: 0
-    color: 5
+    type: 2
+    color: 0
   - position: {x: 3, y: 4}
-    type: 0
-    color: 4
+    type: 2
+    color: 0
   - position: {x: 4, y: 4}
-    type: 0
-    color: 1
+    type: 2
+    color: 0
   - position: {x: 5, y: 4}
     type: 2
     color: 0
@@ -181,4 +181,4 @@ MonoBehaviour:
   - position: {x: 6, y: 7}
     type: 2
     color: 0
-  cellSize: 1.5
+  cellSize: 1.3
