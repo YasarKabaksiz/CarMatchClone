@@ -7,6 +7,7 @@ namespace CarMatchClone.Core
     {
         [SerializeField] private VoidEventChannel _onGameOverChannel;
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
+        [SerializeField] private bool _debugLogging;
 
         private GameState _gameState;
 
@@ -30,13 +31,13 @@ namespace CarMatchClone.Core
         private void HandleGameOver()
         {
             _gameState.IsGameOver = true;
-            Debug.Log("[GameManager] Game Over.");
+            if (_debugLogging) Debug.Log("[GameManager] Game Over.");
         }
 
         private void HandleLevelComplete()
         {
             _gameState.IsLevelComplete = true;
-            Debug.Log("[GameManager] Level Complete!");
+            if (_debugLogging) Debug.Log("[GameManager] Level Complete!");
         }
     }
 }
