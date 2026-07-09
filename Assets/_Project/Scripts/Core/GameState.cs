@@ -8,6 +8,7 @@ namespace CarMatchClone.Core
         public bool IsGameOver { get; set; }
         public bool IsLevelComplete { get; set; }
         public int MovesUsedCount { get; set; }
+        public int Coins { get; set; }
         public Dictionary<BoosterType, int> BoosterCounts { get; } = new Dictionary<BoosterType, int>();
     }
 }

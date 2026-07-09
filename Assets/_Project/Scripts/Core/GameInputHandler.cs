@@ -10,7 +10,7 @@ namespace CarMatchClone.Core
         [SerializeField] private CarEventChannel  _onCarSelectedChannel;
         [SerializeField] private CarEventChannel  _onCarReachedHolderChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
-        [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
+        [SerializeField] private VoidEventChannel _onNewLevelLoadedChannel;
 
         private InputAction _clickAction;
         private bool _moveLocked;
@@ -23,7 +23,7 @@ namespace CarMatchClone.Core
             _clickAction.Enable();
             _onCarReachedHolderChannel.Subscribe(HandleCarReachedHolder);
             _onGameOverChannel.Subscribe(HandleGameOver);
-            _onLevelCompleteChannel.Subscribe(HandleLevelComplete);
+            _onNewLevelLoadedChannel.Subscribe(HandleNewLevelLoaded);
         }
 
         private void OnDisable()
@@ -33,12 +33,12 @@ namespace CarMatchClone.Core
             _clickAction.Dispose();
             _onCarReachedHolderChannel.Unsubscribe(HandleCarReachedHolder);
             _onGameOverChannel.Unsubscribe(HandleGameOver);
-            _onLevelCompleteChannel.Unsubscribe(HandleLevelComplete);
+            _onNewLevelLoadedChannel.Unsubscribe(HandleNewLevelLoaded);
         }
 
         private void HandleCarReachedHolder(Car car) => _moveLocked = false;
         private void HandleGameOver()                 => _inputLocked = true;
-        private void HandleLevelComplete()            => _inputLocked = true;
+        private void HandleNewLevelLoaded()           { _inputLocked = false; _moveLocked = false; }
 
         private void OnClick(InputAction.CallbackContext ctx)
         {

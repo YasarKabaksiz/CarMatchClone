@@ -23,7 +23,6 @@ namespace CarMatchClone.Board
         [SerializeField] private ObjectPoolManager _poolManager;
         [SerializeField] private CarEventChannel _onCarSelectedChannel;
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
-        [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
         [SerializeField] private VoidEventChannel _onBoardStateChangedChannel;
 
         [SerializeField] private CarEventChannel _onBeforeCarRemovedChannel;
@@ -53,7 +52,8 @@ namespace CarMatchClone.Board
 
         private void Awake()
         {
-            if (_levelData == null) { Debug.LogError("[Board] LevelData atanmamış."); return; }
+            // _levelData null olabilir — GameManager.Start() RebuildGrid ile yükleyecek.
+            if (_levelData == null) { Debug.LogWarning("[Board] LevelData atanmamış — GameManager yükleyecek."); return; }
             if (_poolManager == null) { Debug.LogError("[Board] ObjectPoolManager atanmamış."); return; }
             BuildPrefabLookup();
             WarmUpPool();
@@ -87,12 +87,9 @@ namespace CarMatchClone.Board
             cell.IsWalkable = true;
 
             _onCellVacatedChannel.Raise(cell);
-
-            if (IsBoardEmpty())
-                _onLevelCompleteChannel.Raise();
         }
 
-        private bool IsBoardEmpty()
+        public bool IsBoardEmpty()
         {
             foreach (var cell in _cells.Values)
                 if (cell.Occupant != null) return false;
@@ -108,10 +105,20 @@ namespace CarMatchClone.Board
             BuildPrefabLookup();
             WarmUpPool();
             BuildGrid();
+            // PathfindingService'i yeni grid için tetikle (Start()'taki ilk hesaplama level geçişinde yetmez).
+            _onBoardStateChangedChannel?.Raise();
         }
 
         [ContextMenu("Rebuild Grid (Test)")]
-        private void RebuildGridTest() => RebuildGrid(_levelData);
+        private void RebuildGridTest()
+        {
+            if (!Application.isPlaying)
+            {
+                Debug.LogWarning("[Board] Rebuild Grid (Test) sadece Play modunda çalışır.");
+                return;
+            }
+            RebuildGrid(_levelData);
+        }
 
         private void BuildPrefabLookup()
         {

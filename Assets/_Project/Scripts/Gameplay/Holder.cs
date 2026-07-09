@@ -14,6 +14,7 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private ColorEventChannel _onMatchOccurredChannel;
         [SerializeField] private VoidEventChannel _onHolderFullChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
+        [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
 
         private Car[] _slots;
@@ -75,7 +76,10 @@ namespace CarMatchClone.Gameplay
             {
                 _onHolderFullChannel.Raise();
                 _onGameOverChannel.Raise();
+                return;
             }
+
+            _onHolderProcessedChannel?.Raise();
         }
 
         private void InsertIntoSlot(Car car)
@@ -206,7 +210,9 @@ namespace CarMatchClone.Gameplay
             {
                 _onHolderFullChannel.Raise();
                 _onGameOverChannel.Raise();
+                return;
             }
+            _onHolderProcessedChannel?.Raise();
         }
 
         public Bounds GetBounds()
