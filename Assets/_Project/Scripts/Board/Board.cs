@@ -5,6 +5,7 @@ using CarMatchClone.Core.Events;
 using CarMatchClone.Core.Pooling;
 using CarMatchClone.Data;
 using CarMatchClone.Gameplay;
+using CarMatchClone.SpecialMechanics;
 
 namespace CarMatchClone.Board
 {
@@ -23,12 +24,16 @@ namespace CarMatchClone.Board
         [SerializeField] private CarEventChannel _onCarSelectedChannel;
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
+        [SerializeField] private VoidEventChannel _onBoardStateChangedChannel;
 
         [SerializeField] private GameObject _wallPrefab;
+        [SerializeField] private GameObject _lockedBoxPrefab;
+        [SerializeField] private GameObject _garageSpawnerPrefab;
 
         private Dictionary<Vector2Int, GridCell> _cells;
         private Dictionary<CarColor, GameObject> _prefabByColor;
         private List<GameObject> _wallObjects = new List<GameObject>();
+        private List<ILaneObstacle> _obstacles = new List<ILaneObstacle>();
         private Vector3 _centerOffset;
 
         private const int BoardWidth = 7;
@@ -45,18 +50,8 @@ namespace CarMatchClone.Board
 
         private void Awake()
         {
-            if (_levelData == null)
-            {
-                Debug.LogError("[Board] LevelData atanmamış.");
-                return;
-            }
-            if (_poolManager == null)
-            {
-                Debug.LogError("[Board] ObjectPoolManager atanmamış.");
-                return;
-            }
-            if (_levelData.cells.Length != 56)
-                Debug.LogWarning($"[Board] LevelData 56 hücre içermeli, {_levelData.cells.Length} var — {_levelData.name}");
+            if (_levelData == null) { Debug.LogError("[Board] LevelData atanmamış."); return; }
+            if (_poolManager == null) { Debug.LogError("[Board] ObjectPoolManager atanmamış."); return; }
             BuildPrefabLookup();
             WarmUpPool();
             BuildGrid();
@@ -98,18 +93,17 @@ namespace CarMatchClone.Board
             return true;
         }
 
-        // LevelLoader'ın Milestone 5'te çağıracağı kalıcı public API.
         public void RebuildGrid(LevelData levelData)
         {
             ReleaseAllCars();
             DestroyWalls();
+            DestroyObstacles();
             _levelData = levelData;
             BuildPrefabLookup();
             WarmUpPool();
             BuildGrid();
         }
 
-        // Inspector sağ tık → "Rebuild Grid (Test)": mevcut LevelData ile grid'i yeniler.
         [ContextMenu("Rebuild Grid (Test)")]
         private void RebuildGridTest() => RebuildGrid(_levelData);
 
@@ -125,10 +119,16 @@ namespace CarMatchClone.Board
             var countByColor = new Dictionary<CarColor, int>();
             foreach (var entry in _levelData.cells)
             {
-                if (entry.type != CellType.CarSlot) continue;
-                if (!countByColor.ContainsKey(entry.color))
-                    countByColor[entry.color] = 0;
-                countByColor[entry.color]++;
+                if (entry.type == CellType.CarSlot)
+                {
+                    if (!countByColor.ContainsKey(entry.color)) countByColor[entry.color] = 0;
+                    countByColor[entry.color]++;
+                }
+                else if (entry.type == CellType.GarageSpawner)
+                {
+                    if (!countByColor.ContainsKey(entry.color)) countByColor[entry.color] = 0;
+                    countByColor[entry.color] += entry.garageStockCount;
+                }
             }
 
             foreach (var entry in _carPrefabs)
@@ -149,38 +149,115 @@ namespace CarMatchClone.Board
                 var cell = new GridCell(entry.position, isWalkable: walkable);
                 _cells[entry.position] = cell;
 
-                if (entry.type == CellType.Wall && _wallPrefab != null)
+                switch (entry.type)
                 {
-                    var wall = Instantiate(_wallPrefab, GridToWorld(entry.position), Quaternion.identity, transform);
-                    wall.name = $"Wall_{entry.position.x}_{entry.position.y}";
-                    _wallObjects.Add(wall);
-                }
-
-                if (entry.type == CellType.CarSlot)
-                {
-                    if (!_prefabByColor.TryGetValue(entry.color, out var prefab))
-                    {
-                        Debug.LogError($"[Board] {entry.color} rengi için prefab atanmamış.");
-                        continue;
-                    }
-
-                    Vector3 worldPos = GridToWorld(entry.position);
-                    GameObject carObj = _poolManager.Get(prefab);
-                    carObj.transform.SetPositionAndRotation(worldPos, Quaternion.identity);
-                    carObj.transform.SetParent(transform);
-                    carObj.SetActive(true);
-                    carObj.name = $"Car_{entry.position.x}_{entry.position.y}";
-
-                    var car = carObj.GetComponent<Car>();
-                    if (car == null)
-                        car = carObj.AddComponent<Car>();
-
-                    car.GridPosition = entry.position;
-                    car.Color = entry.color;
-                    car.SourcePrefab = prefab;
-                    cell.Occupant = car;
+                    case CellType.Wall:
+                        SpawnWall(entry.position);
+                        break;
+                    case CellType.CarSlot:
+                        SpawnCarAtCell(cell, entry.color);
+                        break;
+                    case CellType.LockedBox:
+                        SpawnLockedBox(entry);
+                        break;
+                    case CellType.GarageSpawner:
+                        SpawnGarageSpawner(entry);
+                        break;
                 }
             }
+        }
+
+        private void SpawnWall(Vector2Int pos)
+        {
+            if (_wallPrefab == null) return;
+            var wall = Instantiate(_wallPrefab, GridToWorld(pos), Quaternion.identity, transform);
+            wall.name = $"Wall_{pos.x}_{pos.y}";
+            _wallObjects.Add(wall);
+        }
+
+        private void SpawnLockedBox(LevelData.CellEntry entry)
+        {
+            if (_lockedBoxPrefab == null)
+            {
+                Debug.LogWarning($"[Board] LockedBox prefab atanmamış — {entry.position} hücresi atlandı.");
+                return;
+            }
+            var obj = Instantiate(_lockedBoxPrefab, GridToWorld(entry.position), Quaternion.identity, transform);
+            obj.name = $"LockedBox_{entry.position.x}_{entry.position.y}";
+            var lb = obj.GetComponent<LockedBox>();
+            if (lb == null) { Debug.LogError("[Board] LockedBox prefab üzerinde LockedBox component yok."); return; }
+            lb.Initialize(entry.position, this, _onCellVacatedChannel);
+            _obstacles.Add(lb);
+        }
+
+        private void SpawnGarageSpawner(LevelData.CellEntry entry)
+        {
+            if (_garageSpawnerPrefab == null)
+            {
+                Debug.LogWarning($"[Board] GarageSpawner prefab atanmamış — {entry.position} hücresi atlandı.");
+                return;
+            }
+            var obj = Instantiate(_garageSpawnerPrefab, GridToWorld(entry.position), Quaternion.identity, transform);
+            obj.name = $"GarageSpawner_{entry.position.x}_{entry.position.y}";
+            var gs = obj.GetComponent<GarageSpawner>();
+            if (gs == null) { Debug.LogError("[Board] GarageSpawner prefab üzerinde GarageSpawner component yok."); return; }
+            gs.Initialize(entry.position, this, _onCellVacatedChannel);
+            gs.Setup(entry.color, entry.facingDirection, entry.garageStockCount);
+            _obstacles.Add(gs);
+        }
+
+        private void SpawnCarAtCell(GridCell cell, CarColor color)
+        {
+            if (!_prefabByColor.TryGetValue(color, out var prefab))
+            {
+                Debug.LogError($"[Board] {color} rengi için prefab atanmamış.");
+                return;
+            }
+
+            GameObject carObj = _poolManager.Get(prefab);
+            carObj.transform.SetPositionAndRotation(GridToWorld(cell.Position), Quaternion.identity);
+            carObj.transform.SetParent(transform);
+            carObj.SetActive(true);
+            carObj.name = $"Car_{cell.Position.x}_{cell.Position.y}";
+
+            var car = carObj.GetComponent<Car>();
+            if (car == null)
+                car = carObj.AddComponent<Car>();
+
+            car.GridPosition = cell.Position;
+            car.Color = color;
+            car.SourcePrefab = prefab;
+            cell.Occupant = car;
+        }
+
+        // LockedBox tarafından tetiklenir; LevelData'dan gizli araç rengini okur.
+        public void RevealLockedBox(Vector2Int pos)
+        {
+            var cell = GetCell(pos);
+            if (cell == null) return;
+
+            CarColor hiddenColor = default;
+            foreach (var entry in _levelData.cells)
+            {
+                if (entry.position == pos && entry.type == CellType.LockedBox)
+                {
+                    hiddenColor = entry.color;
+                    break;
+                }
+            }
+
+            SpawnCarAtCell(cell, hiddenColor);
+            _onBoardStateChangedChannel?.Raise();
+        }
+
+        // GarageSpawner tarafından tetiklenir; facingCell'e araç spawn eder.
+        public void SpawnFromGarage(Vector2Int pos, CarColor color)
+        {
+            var cell = GetCell(pos);
+            if (cell == null || cell.Occupant != null) return;
+
+            SpawnCarAtCell(cell, color);
+            _onBoardStateChangedChannel?.Raise();
         }
 
         private void ReleaseAllCars()
@@ -199,6 +276,16 @@ namespace CarMatchClone.Board
             foreach (var wall in _wallObjects)
                 if (wall != null) Destroy(wall);
             _wallObjects.Clear();
+        }
+
+        private void DestroyObstacles()
+        {
+            foreach (var obstacle in _obstacles)
+            {
+                if (obstacle is MonoBehaviour mb && mb != null)
+                    Destroy(mb.gameObject);
+            }
+            _obstacles.Clear();
         }
 
         public GridCell GetCell(int x, int y) => GetCell(new Vector2Int(x, y));

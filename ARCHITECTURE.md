@@ -123,28 +123,43 @@ Bir arabanın seçilebilir olması için **başlangıçtan Exit'e kadar TÜM yol
 
 ## 6. Özel Mekanikler (Locked Box & Garage Spawner)
 
-Her ikisi de ortak bir prensipten türer: **"komşu bir hücre boşaldığında tetiklenen davranış."**
+Her ikisi de ortak bir prensipten türer: **"bir hücre boşaldığında, kendi kurallarına göre tepki veren davranış."**
 
+### ILaneObstacle Interface
+
+```csharp
+public interface ILaneObstacle
+{
+    void Initialize(Vector2Int gridPos, Board board, CellEventChannel onCellVacatedChannel);
+    bool IsActive { get; }
+}
 ```
-ILaneObstacle
-└── OnAdjacentCellVacated(GridCell triggeringCell): void
-```
+
+**Tasarım notları:**
+- `OnAdjacentCellVacated(GridCell)` interface'ten kaldırıldı. Her MonoBehaviour implementasyonu kendi `OnEnable`/`OnDisable`'ında `CellEventChannel`'a subscribe/unsubscribe eder (self-subscription pattern). Board obstacle'ları iterate etmez.
+- Filtre mantığı implementasyonun içinde kalır: LockedBox 4 komşuyu kontrol eder, GarageSpawner sadece kendi `facingDirection`'ını.
+- `IsActive` Board'un ileride obstacle durumunu sorgulamasına izin verir.
 
 ### LockedBox
-- Board'daki normal bir araç slotunun yerinde durur (kendi hücresi `isWalkable = false`).
-- Bitişiğindeki **herhangi bir** hücre boşaldığında (komşu araç holder'a gittiğinde) tetiklenir.
-- Tetiklenince: kutu görsel olarak patlar, kendi hücresindeki `occupant` içindeki araç ortaya çıkar (reveal), hücre artık o arabanın durumuna göre walkable/occupied olur.
-- **Tek seferlik davranış** (bir kez tetiklenir, sonra pasif).
+- Board'daki bir hücrenin yerinde durur; hücre `isWalkable = false`.
+- **LevelData'da:** `CellEntry { type=LockedBox, color=Red }` — `color` alanı kutunun patlamasıyla ortaya çıkacak arabanın rengini tanımlar. Level Editor'da tek satır, ayrı "hidden car" girişi yoktur.
+- **Tetiklenme:** 4 komşudan (yukarı/aşağı/sağ/sol) herhangi biri boşalınca — yönsüz (omnidirectional).
+- **Filtre:** `vacatedCell.Position == _gridPos + offset` — saf Vector2Int aritmetiği, Board.GetCell() çağrısı gerekmez.
+- **Tetiklenince:** `board.RevealLockedBox(pos)` → Board pool'dan araç çıkarır, `cell.Occupant` atar, `OnBoardStateChanged` event'i fırlatır → PathfindingService recalculate.
+- **Tek seferlik:** `_triggered = true` sonrası tüm event'ler yok sayılır, `IsActive` false döner.
 
 ### GarageSpawner
-- Bir lane'in **herhangi bir noktasında** (uçta ya da ortada) bulunabilir; kendi hücresi `isWalkable = false` (garaj doluyken içinden geçilemez).
-- Önündeki (bitişiğindeki) araç holder'a gidince tetiklenir.
-- Tetiklenince: garajın bulunduğu hücreye yeni bir araç spawn olur (garajın stok rengi), stok sayacı 1 azalır.
-- Stok `0` olunca: garaj pasifleşir, artık spawn etmez. **Kendi hücresi kalıcı olarak `isWalkable = false` kalır** (duvar gibi davranır).
-- Garaj kapandıktan sonra arkasındaki araçlar, PathfindingService'in bulacağı **alternatif bir yoldan** (sağ/sol boşsa oradan dolanarak) Exit'e ulaşabilir. Bu, ekstra kod gerektirmez — çünkü PathfindingService zaten her state değişiminde board'u yeniden tarar.
+- Bir lane'in herhangi bir noktasında bulunabilir; kendi hücresi (`_gridPos`) **daima `isWalkable = false`** — hiçbir zaman araç almaz, BuildGrid'de set edilir, sonra değişmez.
+- **LevelData'da:** `CellEntry { type=GarageSpawner, color=Blue, facingDirection=Down, garageStockCount=3 }`.
+- **Tetiklenme:** SADECE `facingCell` (`_gridPos + facingDirection.ToVector()`) boşalınca. Sağ/sol/arka boşalsa tepki vermez.
+- **Filtre:** `vacatedCell.Position == _facingCell` — tek karşılaştırma, Board sorgusu yok.
+- **Spawn pozisyonu:** Araç `_gridPos`'a DEĞİL, `_facingCell`'e spawn olur. Garajın kendi hücresi yapısal olarak orada kalır.
+- **Çoklu spawn:** Her seferinde `_facingCell` boşaldığında tetiklenir — ilk araç (CarSlot'tan) ayrılınca 1. spawn, spawned araç ayrılınca 2. spawn vb. Ek branch gerekmez; tek tetikleme koşulu yeterlidir.
+- **Tetiklenince:** `board.SpawnFromGarage(_facingCell, color)` → Board pool'dan araç çıkarır, `facingCell.Occupant` atar, `OnBoardStateChanged` fırlatır → PathfindingService recalculate.
+- Stok `0` olunca: garaj pasifleşir (`IsActive = false`). `_facingCell` o andan itibaren normal boş hücre gibi davranır (`isWalkable = true`). `_gridPos` hâlâ non-walkable (garaj yapısı orada duruyor).
 
 ### Neden Ortak Interface
-`ILaneObstacle` sayesinde ileride yeni bir engel tipi eklenmek istendiğinde (örn. "elevator" — görsellerde bahsi geçen ama mekaniği netleşmemiş bir eleman), mevcut sistemlere dokunmadan sadece yeni bir sınıf yazılır.
+`ILaneObstacle` sayesinde ileride yeni bir engel tipi (örn. "elevator") mevcut sistemlere dokunmadan yeni bir sınıf olarak eklenebilir.
 
 ---
 
@@ -172,7 +187,8 @@ Sistemler birbirini doğrudan çağırmaz, aşağıdaki event'ler üzerinden hab
 ```
 OnCarSelected(Car car)
 OnCarReachedHolder(Car car)
-OnCellVacated(GridCell cell)
+OnCellVacated(GridCell cell)       // araç board'dan ayrıldı → PathfindingService tetiklenir
+OnBoardStateChanged()              // yeni araç eklendi (reveal/spawn) → PathfindingService tetiklenir
 OnMatchOccurred(CarColor color)
 OnHolderFull()
 OnGameOver()
@@ -192,7 +208,7 @@ Core/Events/
   CarEventChannel.cs         // GameEventChannel<Car>
   CellEventChannel.cs        // GameEventChannel<GridCell>
   ColorEventChannel.cs       // GameEventChannel<CarColor>
-  VoidEventChannel.cs        // parametresiz event'ler için (OnGameOver, OnLevelComplete)
+  VoidEventChannel.cs        // parametresiz event'ler için (OnGameOver, OnLevelComplete, OnBoardStateChanged)
 ```
 
 Her event channel bir `.asset` dosyası olarak `Assets/_Project/Data/EventChannels/` altında saklanır. Yayınlayan (publisher) ve dinleyen (listener) taraflar birbirini hiç tanımaz, sadece aynı `.asset` dosyasına referans verir. Örn: `Board`, `OnCellVacated` channel'ına `Raise()` çağırır; `PathfindingService` ve `ILaneObstacle` implementasyonları aynı channel'ı dinler — ikisi de birbirinden habersizdir.

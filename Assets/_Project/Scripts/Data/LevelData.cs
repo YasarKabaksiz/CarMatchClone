@@ -11,16 +11,12 @@ namespace CarMatchClone.Data
         {
             public Vector2Int position;
             public CellType type;
-            public CarColor color;
+            public CarColor color;            // CarSlot: araç rengi | LockedBox: gizli araç rengi | GarageSpawner: spawn rengi
+            public FacingDirection facingDirection; // Yalnızca GarageSpawner için
+            public int garageStockCount;           // Yalnızca GarageSpawner için
         }
 
         public CellEntry[] cells;
         public float cellSize = 1.5f;
-
-        private void OnValidate()
-        {
-            if (cells != null && cells.Length != 0 && cells.Length != 56)
-                Debug.LogWarning($"[LevelData] 56 hücre bekleniyor, {cells.Length} var — {name}");
-        }
     }
 }

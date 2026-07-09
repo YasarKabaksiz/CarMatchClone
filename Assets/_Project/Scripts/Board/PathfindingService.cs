@@ -8,6 +8,7 @@ namespace CarMatchClone.Board
     {
         [SerializeField] private Board _board;
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
+        [SerializeField] private VoidEventChannel _onBoardStateChangedChannel;
         [SerializeField] private bool _debugLogging;
 
         private static readonly Vector2Int[] _directions =
@@ -27,22 +28,25 @@ namespace CarMatchClone.Board
         private void OnEnable()
         {
             if (_onCellVacatedChannel == null)
-            {
                 Debug.LogWarning("[PathfindingService] OnCellVacatedChannel atanmamış — dinamik güncelleme çalışmaz.");
-                return;
-            }
-            _onCellVacatedChannel.Subscribe(HandleCellVacated);
+            else
+                _onCellVacatedChannel.Subscribe(HandleCellVacated);
+
+            if (_onBoardStateChangedChannel == null)
+                Debug.LogWarning("[PathfindingService] OnBoardStateChangedChannel atanmamış — reveal/spawn sonrası güncelleme çalışmaz.");
+            else
+                _onBoardStateChangedChannel.Subscribe(HandleBoardStateChanged);
         }
 
         private void OnDisable()
         {
             _onCellVacatedChannel?.Unsubscribe(HandleCellVacated);
+            _onBoardStateChangedChannel?.Unsubscribe(HandleBoardStateChanged);
         }
 
-        private void HandleCellVacated(GridCell cell)
-        {
-            RecalculateReachability(_board);
-        }
+        private void HandleCellVacated(GridCell cell) => RecalculateReachability(_board);
+
+        private void HandleBoardStateChanged() => RecalculateReachability(_board);
 
         public void RecalculateReachability(Board board)
         {
