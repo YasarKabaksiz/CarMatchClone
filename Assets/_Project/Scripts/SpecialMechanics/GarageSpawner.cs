@@ -12,10 +12,10 @@ namespace CarMatchClone.SpecialMechanics
         private CarMatchClone.Board.Board _board;
         private CellEventChannel _onCellVacatedChannel;
         private ObstacleEventChannel _onObstacleTriggeredChannel;
-        private CarColor _spawnColor;
-        private int _stockCount;
+        private CarColor[] _garageColors;
+        private int _currentSpawnIndex;
 
-        public bool IsActive => _stockCount > 0;
+        public bool IsActive => _garageColors != null && _currentSpawnIndex < _garageColors.Length;
 
         public void Initialize(Vector2Int gridPos, CarMatchClone.Board.Board board, CellEventChannel onCellVacatedChannel)
         {
@@ -26,11 +26,11 @@ namespace CarMatchClone.SpecialMechanics
         }
 
         // Board.SpawnGarageSpawner tarafından Initialize'dan sonra çağrılır.
-        public void Setup(CarColor color, FacingDirection facing, int stockCount, ObstacleEventChannel onObstacleTriggeredChannel)
+        public void Setup(CarColor[] garageColors, FacingDirection facing, ObstacleEventChannel onObstacleTriggeredChannel)
         {
-            _spawnColor = color;
+            _garageColors = garageColors;
+            _currentSpawnIndex = 0;
             _facingCell = _gridPos + facing.ToVector();
-            _stockCount = stockCount;
             _onObstacleTriggeredChannel = onObstacleTriggeredChannel;
         }
 
@@ -41,15 +41,16 @@ namespace CarMatchClone.SpecialMechanics
 
         private void OnCellVacated(GridCell cell)
         {
-            if (_stockCount <= 0) return;
+            if (!IsActive) return;
             if (cell.Position != _facingCell) return;
             Trigger();
         }
 
         private void Trigger()
         {
-            _stockCount--;
-            _board.SpawnFromGarage(_facingCell, _spawnColor);
+            var spawnColor = _garageColors[_currentSpawnIndex];
+            _currentSpawnIndex++;
+            _board.SpawnFromGarage(_facingCell, spawnColor);
             _onObstacleTriggeredChannel?.Raise(new ObstacleTriggerPayload
             {
                 Position = _facingCell,
@@ -59,7 +60,7 @@ namespace CarMatchClone.SpecialMechanics
 
         private void UndoLastSpawn()
         {
-            _stockCount++;
+            _currentSpawnIndex--;
             _board.RemoveCarAt(_facingCell);
         }
     }

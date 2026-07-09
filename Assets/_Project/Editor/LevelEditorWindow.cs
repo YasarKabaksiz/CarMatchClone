@@ -13,16 +13,16 @@ namespace CarMatchClone.Editor
         private const float CELL_PX = 48f;
 
         // ── Grid state ────────────────────────────────────────────────
-        private readonly CellType[]       _cellTypes   = new CellType[TOTAL];
-        private readonly CarColor[]       _cellColors  = new CarColor[TOTAL];
-        private readonly FacingDirection[] _cellFacings = new FacingDirection[TOTAL];
-        private readonly int[]            _cellStocks  = new int[TOTAL];
+        private readonly CellType[]        _cellTypes        = new CellType[TOTAL];
+        private readonly CarColor[]        _cellColors       = new CarColor[TOTAL];  // CarSlot + LockedBox
+        private readonly FacingDirection[] _cellFacings      = new FacingDirection[TOTAL];
+        private readonly List<CarColor>[]  _cellGarageColors = new List<CarColor>[TOTAL]; // GarageSpawner
 
         // ── Fırça state ───────────────────────────────────────────────
-        private CellType        _brushType   = CellType.Wall;
-        private CarColor        _brushColor  = CarColor.None;
-        private FacingDirection _brushFacing = FacingDirection.Down;
-        private int             _brushStock  = 1;
+        private CellType        _brushType    = CellType.Wall;
+        private CarColor        _brushColor   = CarColor.None;
+        private FacingDirection _brushFacing  = FacingDirection.Down;
+        private List<CarColor>  _brushGarageColors = new List<CarColor>();
 
         // ── Asset & ayarlar ───────────────────────────────────────────
         private LevelData _target;
@@ -33,11 +33,10 @@ namespace CarMatchClone.Editor
         private GUIStyle _coordLabel;
         private GUIStyle _overlayLabel;
 
-        // Renk satırının aktif olduğu tipler
+        // CarSlot + LockedBox için tek renk seçimi aktif; Garage kendi listesini kullanır
         private bool BrushNeedsColor =>
-            _brushType == CellType.CarSlot     ||
-            _brushType == CellType.LockedBox   ||
-            _brushType == CellType.GarageSpawner;
+            _brushType == CellType.CarSlot   ||
+            _brushType == CellType.LockedBox;
 
         private bool BrushIsGarage => _brushType == CellType.GarageSpawner;
 
@@ -119,12 +118,8 @@ namespace CarMatchClone.Editor
             TypeBtn(CellType.GarageSpawner, "Garage",    new Color(0.50f, 0.12f, 0.70f));
             EditorGUILayout.EndHorizontal();
 
-            // --- Renk satırı ---
-            // Label'ı seçili tipe göre değiştir: ne için renk seçildiği belli olsun
-            string colorLabel = _brushType == CellType.LockedBox     ? "Gizli:"
-                              : _brushType == CellType.GarageSpawner ? "Spawn:"
-                              : "Renk:";
-
+            // --- Renk satırı (CarSlot + LockedBox için; Garage devre dışı) ---
+            string colorLabel = _brushType == CellType.LockedBox ? "Gizli:" : "Renk:";
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(colorLabel, GUILayout.Width(44));
             GUI.enabled = BrushNeedsColor;
@@ -137,30 +132,72 @@ namespace CarMatchClone.Editor
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
-            // --- Yön & Stok satırı (yalnızca GarageSpawner aktif) ---
+            // --- Yön satırı (yalnızca GarageSpawner aktif) ---
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Yön:", GUILayout.Width(32));
             GUI.enabled = BrushIsGarage;
             _brushFacing = (FacingDirection)EditorGUILayout.EnumPopup(
                 _brushFacing, GUILayout.Width(90));
-            GUILayout.Space(12);
-            // Stok etiketi: mevcut fırça değerini göster, sıfır ise uyarı rengi
-            var prevC = GUI.contentColor;
-            GUI.contentColor = (BrushIsGarage && _brushStock == 0) ? new Color(1f, 0.4f, 0.4f) : Color.white;
-            GUILayout.Label($"Stok [{_brushStock}]:", GUILayout.Width(58));
-            GUI.contentColor = prevC;
-            _brushStock = Mathf.Max(0, EditorGUILayout.IntField(_brushStock, GUILayout.Width(40)));
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
-            // Uyarı: Garage seçiliyken parametreleri boya ÖNCE ayarla
+            // --- Garage renk listesi ---
             if (BrushIsGarage)
+                DrawGarageColorList();
+        }
+
+        private void DrawGarageColorList()
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            // Başlık + stok sayısı (salt okunur, listeden türetilir)
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(
+                $"Spawn Renk Sırası   Stok: {_brushGarageColors.Count}  (otomatik)",
+                EditorStyles.boldLabel);
+            EditorGUILayout.EndHorizontal();
+
+            // Ekle / Sil düğmeleri
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("+ Renk Ekle", GUILayout.Width(90)))
             {
-                EditorGUILayout.HelpBox(
-                    "Yön ve Stok değerlerini ayarladıktan SONRA hücreyi boyayın.\n" +
-                    "Değer değiştirince hücreyi tekrar boyamak gerekir.",
-                    MessageType.Info);
+                _brushGarageColors.Add(CarColor.Red);
+                Repaint();
             }
+            GUI.enabled = _brushGarageColors.Count > 0;
+            if (GUILayout.Button("- Son Rengi Sil", GUILayout.Width(110)))
+            {
+                _brushGarageColors.RemoveAt(_brushGarageColors.Count - 1);
+                Repaint();
+            }
+            GUI.enabled = true;
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(2);
+
+            if (_brushGarageColors.Count == 0)
+            {
+                EditorGUILayout.HelpBox("En az 1 renk ekleyin.", MessageType.Warning);
+            }
+            else
+            {
+                for (int i = 0; i < _brushGarageColors.Count; i++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label($"{i + 1}.", GUILayout.Width(22));
+                    _brushGarageColors[i] = (CarColor)EditorGUILayout.EnumPopup(
+                        _brushGarageColors[i], GUILayout.Width(90));
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.HelpBox(
+                "Yön ve renk sırasını ayarladıktan SONRA hücreyi boyayın.\n" +
+                "Değer değiştirince hücreyi tekrar boyamak gerekir.",
+                MessageType.Info);
         }
 
         private void TypeBtn(CellType type, string label, Color col)
@@ -170,8 +207,6 @@ namespace CarMatchClone.Editor
             if (GUILayout.Button(label, GUILayout.Width(80)))
             {
                 _brushType = type;
-                // Renk sadece renk gerektiren tipler için korunur;
-                // Wall ve Empty seçilince sıfırlanır
                 if (type == CellType.Wall || type == CellType.Empty)
                     _brushColor = CarColor.None;
             }
@@ -208,7 +243,6 @@ namespace CarMatchClone.Editor
 
                     DrawCell(cellRect, idx);
 
-                    // Koordinat etiketi (sol alt)
                     GUI.Label(
                         new Rect(cellRect.x + 2, cellRect.yMax - 13, cellRect.width, 13),
                         $"{x},{y}", _coordLabel);
@@ -244,27 +278,27 @@ namespace CarMatchClone.Editor
                     break;
 
                 case CellType.LockedBox:
-                    // Dış çerçeve: koyu amber → "kilitli" hücre rengi
                     EditorGUI.DrawRect(r, new Color(0.78f, 0.42f, 0.08f));
-                    // İç kare: gizli araç rengi
                     EditorGUI.DrawRect(
                         new Rect(r.x + 10, r.y + 10, r.width - 20, r.height - 20),
                         ToDisplayColor(_cellColors[idx]));
-                    // "L" etiketi sol üst
                     GUI.Label(new Rect(r.x + 2, r.y + 1, 14, 14), "L", _overlayLabel);
                     break;
 
                 case CellType.GarageSpawner:
-                    // Dış çerçeve: koyu mor → garaj rengi
+                    var gColors = _cellGarageColors[idx];
                     EditorGUI.DrawRect(r, new Color(0.45f, 0.10f, 0.65f));
-                    // İç kare: spawn araç rengi
+                    // İç kare: sıradaki ilk rengi gösterir
+                    var firstColor = (gColors != null && gColors.Count > 0)
+                        ? gColors[0] : CarColor.None;
                     EditorGUI.DrawRect(
                         new Rect(r.x + 10, r.y + 10, r.width - 20, r.height - 20),
-                        ToDisplayColor(_cellColors[idx]));
-                    // Yön oku + stok sayısı sol üst ("↓ 2" formatında)
+                        ToDisplayColor(firstColor));
+                    // Sol üst: yön oku + stok sayısı
+                    int stockCount = gColors?.Count ?? 0;
                     GUI.Label(
                         new Rect(r.x + 2, r.y + 1, r.width - 4, 14),
-                        $"{DirectionArrow(_cellFacings[idx])} {_cellStocks[idx]}",
+                        $"{DirectionArrow(_cellFacings[idx])} {stockCount}",
                         _overlayLabel);
                     break;
 
@@ -318,7 +352,7 @@ namespace CarMatchClone.Editor
             WriteToAsset(asset);
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
-            _target   = asset;
+            _target = asset;
             Selection.activeObject = asset;
             Debug.Log($"[LevelEditor] Yeni asset → {path}");
         }
@@ -328,10 +362,10 @@ namespace CarMatchClone.Editor
         {
             for (int i = 0; i < TOTAL; i++)
             {
-                _cellTypes[i]   = CellType.Empty;
-                _cellColors[i]  = CarColor.None;
-                _cellFacings[i] = FacingDirection.Down;
-                _cellStocks[i]  = 0;
+                _cellTypes[i]        = CellType.Empty;
+                _cellColors[i]       = CarColor.None;
+                _cellFacings[i]      = FacingDirection.Down;
+                _cellGarageColors[i] = new List<CarColor>();
             }
             Repaint();
         }
@@ -347,11 +381,13 @@ namespace CarMatchClone.Editor
             {
                 int x = e.position.x, y = e.position.y;
                 if (x < 0 || x >= COLS || y < 0 || y >= ROWS) continue;
-                int idx         = y * COLS + x;
+                int idx = y * COLS + x;
                 _cellTypes[idx]   = e.type;
                 _cellColors[idx]  = e.color;
                 _cellFacings[idx] = e.facingDirection;
-                _cellStocks[idx]  = e.garageStockCount;
+                _cellGarageColors[idx] = e.garageColors != null
+                    ? new List<CarColor>(e.garageColors)
+                    : new List<CarColor>();
             }
         }
 
@@ -364,11 +400,12 @@ namespace CarMatchClone.Editor
                     int idx = y * COLS + x;
                     cells.Add(new LevelData.CellEntry
                     {
-                        position         = new Vector2Int(x, y),
-                        type             = _cellTypes[idx],
-                        color            = _cellColors[idx],
-                        facingDirection  = _cellFacings[idx],
-                        garageStockCount = _cellStocks[idx]
+                        position        = new Vector2Int(x, y),
+                        type            = _cellTypes[idx],
+                        color           = _cellColors[idx],
+                        facingDirection = _cellFacings[idx],
+                        garageColors    = _cellGarageColors[idx]?.ToArray()
+                                          ?? System.Array.Empty<CarColor>()
                     });
                 }
             asset.cells    = cells.ToArray();
@@ -377,24 +414,25 @@ namespace CarMatchClone.Editor
 
         private void ApplyBrush(int idx)
         {
-            _cellTypes[idx] = _brushType;
+            _cellTypes[idx]   = _brushType;
+            _cellFacings[idx] = _brushFacing;
+
             switch (_brushType)
             {
                 case CellType.CarSlot:
                 case CellType.LockedBox:
-                    _cellColors[idx]  = _brushColor;
-                    _cellFacings[idx] = FacingDirection.Down;
-                    _cellStocks[idx]  = 0;
+                    _cellColors[idx]       = _brushColor;
+                    _cellGarageColors[idx] = new List<CarColor>();
                     break;
+
                 case CellType.GarageSpawner:
-                    _cellColors[idx]  = _brushColor;
-                    _cellFacings[idx] = _brushFacing;
-                    _cellStocks[idx]  = _brushStock;
+                    _cellColors[idx]       = CarColor.None;
+                    _cellGarageColors[idx] = new List<CarColor>(_brushGarageColors);
                     break;
+
                 default: // Empty, Wall
-                    _cellColors[idx]  = CarColor.None;
-                    _cellFacings[idx] = FacingDirection.Down;
-                    _cellStocks[idx]  = 0;
+                    _cellColors[idx]       = CarColor.None;
+                    _cellGarageColors[idx] = new List<CarColor>();
                     break;
             }
         }

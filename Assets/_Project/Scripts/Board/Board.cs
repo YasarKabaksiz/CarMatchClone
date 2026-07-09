@@ -130,10 +130,13 @@ namespace CarMatchClone.Board
                     if (!countByColor.ContainsKey(entry.color)) countByColor[entry.color] = 0;
                     countByColor[entry.color]++;
                 }
-                else if (entry.type == CellType.GarageSpawner)
+                else if (entry.type == CellType.GarageSpawner && entry.garageColors != null)
                 {
-                    if (!countByColor.ContainsKey(entry.color)) countByColor[entry.color] = 0;
-                    countByColor[entry.color] += entry.garageStockCount;
+                    foreach (var c in entry.garageColors)
+                    {
+                        if (!countByColor.ContainsKey(c)) countByColor[c] = 0;
+                        countByColor[c]++;
+                    }
                 }
             }
 
@@ -209,7 +212,7 @@ namespace CarMatchClone.Board
             var gs = obj.GetComponent<GarageSpawner>();
             if (gs == null) { Debug.LogError("[Board] GarageSpawner prefab üzerinde GarageSpawner component yok."); return; }
             gs.Initialize(entry.position, this, _onCellVacatedChannel);
-            gs.Setup(entry.color, entry.facingDirection, entry.garageStockCount, _onObstacleTriggeredChannel);
+            gs.Setup(entry.garageColors ?? System.Array.Empty<CarColor>(), entry.facingDirection, _onObstacleTriggeredChannel);
             _obstacles.Add(gs);
         }
 

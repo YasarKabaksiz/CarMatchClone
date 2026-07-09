@@ -17,280 +17,280 @@ MonoBehaviour:
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 0}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 0}
     type: 1
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 0}
     type: 1
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 0}
     type: 1
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 0}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 0}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 1}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 1}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 1}
     type: 0
     color: 1
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 1}
     type: 0
     color: 1
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 1}
     type: 1
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 1}
-    type: 2
-    color: 0
+    type: 0
+    color: 4
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 1}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 2}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 2}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 2}
     type: 0
     color: 2
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 2}
     type: 4
-    color: 4
+    color: 0
     facingDirection: 1
-    garageStockCount: 2
+    garageColors: 01000000040000000400000001000000
   - position: {x: 4, y: 2}
     type: 0
     color: 1
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 2}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 2}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 3}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 3}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 3}
     type: 0
     color: 2
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 3}
     type: 0
     color: 1
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 3}
     type: 0
     color: 2
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 3}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 3}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 4}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 5}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 6}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 0, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 1, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 2, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 3, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 4, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 5, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   - position: {x: 6, y: 7}
     type: 2
     color: 0
     facingDirection: 1
-    garageStockCount: 0
+    garageColors: 
   cellSize: 1.5
