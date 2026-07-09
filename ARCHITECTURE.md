@@ -79,8 +79,23 @@ Assets/
 ### LevelData (ScriptableObject)
 Her level için:
 - `gridWidth`, `gridHeight`
-- `cells[]`: her hücre için — pozisyon, hücre tipi (Empty, Wall, CarSlot, GarageSpawner, LockedBox), araç rengi (varsa), garaj stok sayısı (varsa)
+- `cells[]`: her hücre için — pozisyon, hücre tipi (Empty, Wall, CarSlot, GarageSpawner, LockedBox), araç rengi (varsa), `garageColors[]` (GarageSpawner: sıralı spawn renkleri, dizi uzunluğu = stok sayısı)
 - `difficultyTag`: enum (Normal, Hard, SuperHard) — sadece UI gösterimi için, oynanışı etkilemez
+
+### CellEntry şeması (önemli alanlar)
+```csharp
+public class CellEntry
+{
+    public Vector2Int position;
+    public CellType type;
+    public CarColor color;            // CarSlot: araç rengi | LockedBox: gizli araç rengi
+    public FacingDirection facingDirection; // Yalnızca GarageSpawner
+    public CarColor[] garageColors;   // Yalnızca GarageSpawner: sıralı spawn renkleri
+                                      // garageColors.Length == stok sayısı (ayrı field yok)
+}
+```
+
+**Not:** `garageStockCount` field'ı kaldırıldı. Stok sayısı artık `garageColors.Length` ile belirlenir — data senkronizasyon sorunu olamaz.
 
 ### Neden ScriptableObject + basit veri, "waypoint" değil
 Board tamamen grid koordinatlarından oluşur. Level tasarımcısı sadece **başlangıç durumunu** tanımlar (hangi hücrede ne var). Yol/rota, oyun çalışırken PathfindingService tarafından anlık hesaplanır. Bu, her level için elle rota tanımlama zahmetini ortadan kaldırır.
@@ -182,13 +197,13 @@ Board hücreyi boşaltır → OnCellVacated fırlar
 
 ### GarageSpawner
 - Bir lane'in herhangi bir noktasında bulunabilir; kendi hücresi (`_gridPos`) **daima `isWalkable = false`**.
-- **LevelData'da:** `CellEntry { type=GarageSpawner, color=Blue, facingDirection=Down, garageStockCount=3 }`.
+- **LevelData'da:** `CellEntry { type=GarageSpawner, facingDirection=Down, garageColors=[Blue, Red, Blue] }`. `color` alanı kullanılmaz; stok sayısı = `garageColors.Length`.
 - **Tetiklenme:** SADECE `facingCell` (`_gridPos + facingDirection.ToVector()`) boşalınca.
 - **Spawn pozisyonu:** Araç `_gridPos`'a DEĞİL, `_facingCell`'e spawn olur.
-- **Çoklu spawn:** Her `_facingCell` boşalmasında tetiklenir — stok bitene kadar.
-- **Tetiklenince:** `_stockCount--` → `board.SpawnFromGarage(_facingCell, color)` → `OnObstacleTriggered.Raise(payload)` — payload'da `UndoLastSpawn` closure.
-- **Undo (UndoLastSpawn):** `_stockCount++` → `board.RemoveCarAt(_facingCell)` (araç silinir, hücre `isWalkable=true` olur — normal boş hücre).
-- Stok `0` olunca: `IsActive = false`. `_facingCell` normal boş hücre gibi davranır.
+- **Çoklu spawn:** Her `_facingCell` boşalmasında tetiklenir — tüm `garageColors` tükenene kadar. Sıradaki araç rengi `_garageColors[_currentSpawnIndex]` ile belirlenir; her tetiklemede `_currentSpawnIndex++`.
+- **Tetiklenince:** `spawnColor = _garageColors[_currentSpawnIndex]` → `_currentSpawnIndex++` → `board.SpawnFromGarage(_facingCell, spawnColor)` → `OnObstacleTriggered.Raise(payload)` — payload'da `UndoLastSpawn` closure.
+- **Undo (UndoLastSpawn):** `_currentSpawnIndex--` → `board.RemoveCarAt(_facingCell)` (araç silinir, hücre `isWalkable=true` olur — normal boş hücre).
+- `IsActive = _garageColors != null && _currentSpawnIndex < _garageColors.Length`. Tüm araçlar spawn edilince `IsActive = false`; `_facingCell` normal boş hücre gibi davranır.
 
 ### Board — Undo için Ek API
 ```csharp
@@ -221,6 +236,12 @@ Holder
 - `MatchChecker` aynı renkten 3 tanenin yan yana olup olmadığını kontrol eder, varsa patlatır, slotları kaydırır.
 - Holder doluyken match oluşmazsa → `GameEvents.OnGameOver` fırlatılır.
 - Board'daki tüm hücreler boş kalınca → `GameEvents.OnLevelComplete` fırlatılır.
+
+### Cascade Match Davranışı (Mimari Not)
+
+**Holder-içi cascade:** `ResolveMatches()` `while (FindMatch() >= 0)` döngüsüyle çalışır. Bir match patladıktan sonra kalan araçlar kaydığında yeni bir match oluşursa bu da otomatik patlar — holder-içi cascade **desteklenir**.
+
+**Board→Holder cascade imkansızdır (tasarım gereği):** Araçlar board'dan holder'a **birer birer** gelir. Bir match patlaması board state'ini değiştirmez; board yeni araç göndermez. Dolayısıyla "match → board'dan yeni araç gelir → tekrar match" gibi çok adımlı bir dış döngü mimaride mevcut değildir. Bu bir kısıtlama değil, bilinçli bir sınırdır — oyun döngüsünün deterministik kalmasını sağlar.
 
 ---
 

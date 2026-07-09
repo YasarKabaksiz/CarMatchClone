@@ -639,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 842f0661d71ee7e4ebb1e4f7eab2307f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Board.Board
-  _levelData: {fileID: 11400000, guid: 1be6316447d3c734a8ab0c7116f7183a, type: 2}
+  _levelData: {fileID: 11400000, guid: 4f6434cb1aafc2745a6729245153df69, type: 2}
   _carPrefabs:
   - color: 2
     prefab: {fileID: 1720168925863219082, guid: bd5e13498f71bc440bccd96cea889f70, type: 3}
@@ -1105,7 +1105,7 @@ MonoBehaviour:
   _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
   _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
   _holder: {fileID: 1910141176}
-  _debugLogging: 1
+  _debugLogging: 0
 --- !u!114 &1722630788
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1148,7 +1148,7 @@ MonoBehaviour:
   _onBeforeCarRemovedChannel: {fileID: 11400000, guid: 135b16306f7bc9a42b6f7e56f951782c, type: 2}
   _onObstacleTriggeredChannel: {fileID: 11400000, guid: 1bde4c170556b624f93f59f7e450db9b, type: 2}
   _holder: {fileID: 1910141176}
-  _debugLogging: 1
+  _debugLogging: 0
 --- !u!4 &1722630791
 Transform:
   m_ObjectHideFlags: 0
