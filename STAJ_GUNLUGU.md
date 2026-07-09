@@ -6,6 +6,71 @@ Bu dosya, staj defteri hazırlarken referans alınmak üzere günlük çalışma
 
 ---
 
+## [TARİH GİRİLECEK] — Gün 4
+
+### Yapılan İşler
+
+Bir önceki günün son commit'i olan `feat(camera): padding ve verticalBias...`'dan itibaren devam edildi.
+
+**1. Milestone 6 — LockedBox + GarageSpawner (Engel Sistemi)**
+- `ILaneObstacle` arayüzüyle genişletilebilir engel altyapısı kuruldu; yeni engel eklemek mevcut kodu değiştirmiyor
+- `LockedBox`: 4 komşudan biri boşalınca tetiklenir, içindeki gizli araç ortaya çıkar; hücre kutu aktifken hiçbir zaman walkable olmaz
+- `GarageSpawner`: karşısındaki (`facingDirection`) hücre boşalınca sıradaki renkte araç spawn eder; stok biter bitirmez kapanır
+- `garageColors[]` dizisi: tek renk yerine sıralı spawn renk listesi — `garageStockCount` field'ı tamamen kaldırıldı, stok sayısı dizinin uzunluğundan otomatik çıkar
+- Self-subscription pattern: her obstacle MonoBehaviour kendi `OnEnable`/`OnDisable`'ında event channel'a abone olup çıkar; Board obstacle'ları iterate etmez
+- Wall hücreleri için statik görsel prefab eklendi (Instantiate/Destroy, pooling gerekmiyor)
+
+**2. Level Editor Aracı Genişletilmesi**
+- LevelEditorWindow'a LockedBox ve GarageSpawner desteği eklendi
+- GarageSpawner için "Spawn Renk Sırası" UI bölümü: `+ Renk Ekle` / `- Son Rengi Sil` butonları, numaralı açılır renkler
+- Garaj hücresinin görsel gösterimi: ilk renk iç kare rengi, "↓ N" etiketi ile stok sayısı
+
+**3. Milestone 7 — Booster Sistemi (Undo, Shuffle, Super Undo, Magnet)**
+- `IBooster` arayüzü `bool Execute(Board, GameState)` döner: `true` → stok azalır, `false` → stok harcanmaz
+- **Undo Booster**: memento+closure hibrit pattern — obstacle geri almalarını `ObstacleTriggerPayload.UndoAction` closure'larıyla kayıt altına alır
+- **Shuffle Booster**: Fisher-Yates karıştırma, araçları pool'a iade edip yeni renklerde yeniden spawn
+- **Super Undo Booster**: aktif seçim mekanizması; seçilen araç reserve slot'a ayrılır, collider + `IsReachable=false` ile tamamen izole edilir; "R" ile normal akışa iade
+- **Magnet Booster**: aynı anda değil kuyruk tabanlı sıralı gönderim — her araç holder'a ulaşınca sıradaki gönderilir; `Queue<Car>` + `HashSet<Car>` filtresiyle birden fazla Magnet chain'in karışması önlendi
+- Race condition düzeltmesi: `OnBeforeCarRemoved` event'i eklendi — Board `HandleCarSelected` başında (hücre değişmeden önce) bu event'i fırlatır; UndoBooster snapshot'ını bu event'e bağladı, GarageSpawner'ın closure kaydetmesiyle çakışma önlendi
+- LockedBox undo: `RemoveCarAtAndBlock()` API'si eklendi (hücre walkable olmadan araç silinir); `OnEnable` re-subscription ile kutu undo sonrası yeniden tetiklenebilir hale getirildi
+
+**4. Milestone 8 — Save/Load Sistemi**
+- `ISaveProvider` arayüzü + `LocalJsonSaveProvider`: `Application.persistentDataPath/save.json` — JSON, JsonUtility
+- `SaveManager` MonoBehaviour: lazy-init provider, `[ContextMenu("Kayıt Dosyasını Sil")]` Edit/Play modunda çalışır
+- `GameManager` artık save sisteminin tek otoritesi: Awake'te yükler, level tamamlanınca/booster kullanılınca/uygulama arka plana alınınca kaydeder
+- `LevelData[]` dizisi ile gerçek level ilerlemesi: `_currentLevelIndex` ile hangi level yükleneceği belirleniyor, `Board._levelData` Inspector'dan boş bırakıldı
+- `GameState.Coins` alanı eklendi (M9+ para sistemi için placeholder)
+- `[ContextMenu("Reset Save Data")]` — sadece Play modunda çalışır, Edit modunda `Application.isPlaying` guard ile sahne kirlenmesi önlendi
+
+**5. Level Complete Timing Düzeltmesi**
+- Eski akışta Level Complete, araç hareket etmeye başlamadan (animasyon bitmeden) tetikleniyordu
+- `OnHolderProcessed` event'i eklendi: Holder, araç işlemeyi tamamlayınca (InsertIntoSlot + ResolveMatches + IsFull kontrolü bittikten sonra) bu event'i fırlatır
+- Level Complete kararı `Board`'dan `GameManager.HandleHolderProcessed()`'a taşındı; board boş VE reserve slot boş ise tetiklenir
+- `Board.IsBoardEmpty()` public API'ye taşındı
+- `Board._onLevelCompleteChannel` kaldırıldı — Board artık level tamamlanma kararı vermiyor
+
+**6. Level Geçişi Bug Düzeltmeleri**
+- `Board.RebuildGrid()` sonunda `_onBoardStateChangedChannel.Raise()` eklendi — level geçişinde PathfindingService'in yeni grid'i tanıması sağlandı
+- `GameInputHandler._inputLocked = true` olan level complete sonrası input kilidi açılmıyordu: `OnNewLevelLoaded` event'i eklendi, `GameInputHandler` buna subscribe olup kilitleri sıfırlıyor
+- Subscriber ters sıra race condition: `OnLevelCompleteChannel` aboneliği `GameInputHandler`'dan kaldırıldı — `OnNewLevelLoaded` yeterli, ayrıca kilitleme gereksizdi
+- SuperUndo ReserveSlot kontrolü: board boşalma kontrolüne `HasReservedCar` testi eklendi
+
+**7. Event Bus Sağlık Kontrolü**
+- 13 event channel asset tarandı: raise eden ve dinleyen sistemler tabloya döküldü
+- `OnBoosterUsed`, `OnMatchOccurred`, `OnHolderFull` — dinleyicisi olmayan ama kasıtlı bırakılan event'ler ARCHITECTURE.md'ye belgelendi (M9/M11 için hazır bağlantı noktaları)
+
+### Kullanılan Araçlar/Teknikler
+- Unity 3D (URP), C#, DOTween, ScriptableObject Event Channel Pattern, A* Pathfinding, Object Pooling, JSON Serialization (JsonUtility), Git/GitHub, Claude Code (AI-assisted development), Unity Editor Scripting (EditorWindow)
+
+### Öğrenilenler / Notlar
+- **Closure tabanlı event payload'ları**: `ObstacleTriggerPayload.UndoAction` ile her tetiklenme anına ait geri alma mantığı, tetiklenmeyle birlikte paketlenerek taşındı — sistemler arası bağımlılık olmadan undo zinciri kuruldu
+- **Race condition'ları event sıralaması ile çözme**: `GameEventChannel.Raise()` listener'ları ters kayıt sırasında çalıştırır; bu yüzden UndoBooster'ın snapshot alması `OnCarSelected` yerine ayrı bir `OnBeforeCarRemoved` event'ine bağlandı — sıra bağımsız garantisi sağlandı
+- **Aynı event'e hem raise hem subscribe (self-raise pattern)**: `GameManager` kendi fırlattığı `OnLevelComplete`'i kendi dinleyebilir; bu, diğer sistemlerin (M9 UI) aynı event'e bağlanmasını kolaylaştırır
+- **"Raise var ama dinleyen yok" durumu normaldir**: `OnBoosterUsed`, `OnMatchOccurred`, `OnHolderFull` şu an dinlenmese de silinmemeli — event-driven mimaride yeni sistemler (HUD, ses, VFX) mevcut event'lere bağlanır, mevcut kodu değiştirmeden genişleme yapılır
+- **Edit modu güvenliği**: `[ContextMenu]` metodları Edit modunda çağrıldığında sahneye GameObjects spawn edebilir; `Application.isPlaying` guard ile bu önlendi
+
+---
+
 ## [TARİH GİRİLECEK] — Gün 3
 
 ### Yapılan İşler
