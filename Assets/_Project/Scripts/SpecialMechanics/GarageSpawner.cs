@@ -11,6 +11,7 @@ namespace CarMatchClone.SpecialMechanics
         private Vector2Int _facingCell;
         private CarMatchClone.Board.Board _board;
         private CellEventChannel _onCellVacatedChannel;
+        private ObstacleEventChannel _onObstacleTriggeredChannel;
         private CarColor _spawnColor;
         private int _stockCount;
 
@@ -24,12 +25,13 @@ namespace CarMatchClone.SpecialMechanics
             _onCellVacatedChannel.Subscribe(OnCellVacated);
         }
 
-        // Initialize'dan SONRA çağrılmalı (_gridPos kullanır).
-        public void Setup(CarColor color, FacingDirection facing, int stockCount)
+        // Board.SpawnGarageSpawner tarafından Initialize'dan sonra çağrılır.
+        public void Setup(CarColor color, FacingDirection facing, int stockCount, ObstacleEventChannel onObstacleTriggeredChannel)
         {
             _spawnColor = color;
             _facingCell = _gridPos + facing.ToVector();
             _stockCount = stockCount;
+            _onObstacleTriggeredChannel = onObstacleTriggeredChannel;
         }
 
         private void OnDisable()
@@ -40,19 +42,25 @@ namespace CarMatchClone.SpecialMechanics
         private void OnCellVacated(GridCell cell)
         {
             if (_stockCount <= 0) return;
-
-            // Tek tetikleyici: garajın "önündeki" hücre boşaldı.
-            // _gridPos asla araç almaz, dolayısıyla vacated event'i hiç gelmez.
             if (cell.Position != _facingCell) return;
-
             Trigger();
         }
 
         private void Trigger()
         {
             _stockCount--;
-            // Araç, garajın kendi hücresine değil facingCell'e spawn olur.
             _board.SpawnFromGarage(_facingCell, _spawnColor);
+            _onObstacleTriggeredChannel?.Raise(new ObstacleTriggerPayload
+            {
+                Position = _facingCell,
+                UndoAction = UndoLastSpawn
+            });
+        }
+
+        private void UndoLastSpawn()
+        {
+            _stockCount++;
+            _board.RemoveCarAt(_facingCell);
         }
     }
 }

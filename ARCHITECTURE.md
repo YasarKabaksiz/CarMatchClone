@@ -140,26 +140,70 @@ public interface ILaneObstacle
 - Filtre mantığı implementasyonun içinde kalır: LockedBox 4 komşuyu kontrol eder, GarageSpawner sadece kendi `facingDirection`'ını.
 - `IsActive` Board'un ileride obstacle durumunu sorgulamasına izin verir.
 
+### Obstacle Undo Mekanizması: ObstacleTriggerPayload + Closure Pattern
+
+Obstacle'ların Undo booster ile geri alınabilmesi için **closure tabanlı** bir yan etki kayıt sistemi kullanılır.
+
+```csharp
+// Data/ObstacleTriggerPayload.cs
+public struct ObstacleTriggerPayload
+{
+    public Vector2Int Position;   // debug/log için
+    public System.Action UndoAction;  // bu tetiklenmeyi geri alan closure
+}
+```
+
+Her obstacle tetiklendiğinde `OnObstacleTriggered` (ObstacleEventChannel) event'i fırlatır; payload içindeki `UndoAction` closure'ı "bu tetiklenmeyi tam olarak geri al" mantığını kapsüller. UndoBooster bu closure'ları `_pendingObstacleUndos` listesinde biriktirir; undo çalıştırılınca ters sırayla invoke eder.
+
+Board, `SpawnGarageSpawner` ve `SpawnLockedBox`'ta `_onObstacleTriggeredChannel` referansını ilgili obstacle nesnesine enjekte eder.
+
+**Subscriber order race condition ve çözümü:**  
+`GameEventChannel.Raise()` listener'ları ters kayıt sırasında çalıştırır. Board hem `OnCarSelected`'a hem de GarageSpawner `OnCellVacated`'a subscribe ise, Board'un `HandleCarSelected` bitmeden önce GarageSpawner tetiklenebilir ve `OnObstacleTriggered` fırlatılabilir — UndoBooster'ın `RecordSnapshot()`'u henüz çalışmamışsa bu closure kaybolur.
+
+**Çözüm:** Board, `HandleCarSelected`'ın en başına (herhangi bir hücre state değişmeden önce) ayrı bir `OnBeforeCarRemoved` event'i fırlatır. UndoBooster `RecordSnapshot`'ını `OnCarSelected` yerine **`OnBeforeCarRemoved`**'a bağlar. Bu sayede snapshot, tüm side-effect'lerden önce alınır.
+
+```
+OnBeforeCarRemoved fırlar
+  → UndoBooster.RecordSnapshot() çalışır (snapshot alındı, pendingList temizlendi)
+Board hücreyi boşaltır → OnCellVacated fırlar
+  → GarageSpawner.Trigger() çalışır → OnObstacleTriggered fırlar
+    → UndoBooster.OnObstacleTriggered() closure'ı listeye ekler ✓
+```
+
 ### LockedBox
 - Board'daki bir hücrenin yerinde durur; hücre `isWalkable = false`.
-- **LevelData'da:** `CellEntry { type=LockedBox, color=Red }` — `color` alanı kutunun patlamasıyla ortaya çıkacak arabanın rengini tanımlar. Level Editor'da tek satır, ayrı "hidden car" girişi yoktur.
+- **LevelData'da:** `CellEntry { type=LockedBox, color=Red }` — `color` alanı kutunun patlamasıyla ortaya çıkacak arabanın rengini tanımlar.
 - **Tetiklenme:** 4 komşudan (yukarı/aşağı/sağ/sol) herhangi biri boşalınca — yönsüz (omnidirectional).
-- **Filtre:** `vacatedCell.Position == _gridPos + offset` — saf Vector2Int aritmetiği, Board.GetCell() çağrısı gerekmez.
-- **Tetiklenince:** `board.RevealLockedBox(pos)` → Board pool'dan araç çıkarır, `cell.Occupant` atar, `OnBoardStateChanged` event'i fırlatır → PathfindingService recalculate.
-- **Tek seferlik:** `_triggered = true` sonrası tüm event'ler yok sayılır, `IsActive` false döner.
+- **Filtre:** `vacatedCell.Position == _gridPos + offset` — saf Vector2Int aritmetiği.
+- **Tetiklenince:** `_triggered = true` → `board.RevealLockedBox(pos)` → Board pool'dan araç çıkarır → `SetActive(false)` (görsel) → `OnObstacleTriggered.Raise(payload)` — payload'da `UndoLastReveal` closure.
+- **Tek seferlik:** `_triggered = true` sonrası event'ler yoksayılır, `IsActive` false döner.
+- **Undo (UndoLastReveal):** `_triggered = false` → `board.RemoveCarAtAndBlock(_gridPos)` (araç silinir, hücre `isWalkable=false` kalır) → `SetActive(true)`. `SetActive(true)` Unity'nin `OnEnable`'ını tetikler; `OnEnable` içinde `_onCellVacatedChannel.Subscribe(OnCellVacated)` çağrısı yapılır — bu sayede kutu yeniden tetiklenebilir hale gelir. İlk aktivasyonda `OnEnable` channel null olduğu için güvenlidir; `Initialize` kendi subscribe'ını ayrıca yapar.
+- **Kritik:** `board.RemoveCarAt` (GarageSpawner için) yerine `board.RemoveCarAtAndBlock` kullanılır. `RemoveCarAt`, `isWalkable=true` set eder; LockedBox hücresi kutu aktifken hiçbir zaman walkable olmamalıdır.
 
 ### GarageSpawner
-- Bir lane'in herhangi bir noktasında bulunabilir; kendi hücresi (`_gridPos`) **daima `isWalkable = false`** — hiçbir zaman araç almaz, BuildGrid'de set edilir, sonra değişmez.
+- Bir lane'in herhangi bir noktasında bulunabilir; kendi hücresi (`_gridPos`) **daima `isWalkable = false`**.
 - **LevelData'da:** `CellEntry { type=GarageSpawner, color=Blue, facingDirection=Down, garageStockCount=3 }`.
-- **Tetiklenme:** SADECE `facingCell` (`_gridPos + facingDirection.ToVector()`) boşalınca. Sağ/sol/arka boşalsa tepki vermez.
-- **Filtre:** `vacatedCell.Position == _facingCell` — tek karşılaştırma, Board sorgusu yok.
-- **Spawn pozisyonu:** Araç `_gridPos`'a DEĞİL, `_facingCell`'e spawn olur. Garajın kendi hücresi yapısal olarak orada kalır.
-- **Çoklu spawn:** Her seferinde `_facingCell` boşaldığında tetiklenir — ilk araç (CarSlot'tan) ayrılınca 1. spawn, spawned araç ayrılınca 2. spawn vb. Ek branch gerekmez; tek tetikleme koşulu yeterlidir.
-- **Tetiklenince:** `board.SpawnFromGarage(_facingCell, color)` → Board pool'dan araç çıkarır, `facingCell.Occupant` atar, `OnBoardStateChanged` fırlatır → PathfindingService recalculate.
-- Stok `0` olunca: garaj pasifleşir (`IsActive = false`). `_facingCell` o andan itibaren normal boş hücre gibi davranır (`isWalkable = true`). `_gridPos` hâlâ non-walkable (garaj yapısı orada duruyor).
+- **Tetiklenme:** SADECE `facingCell` (`_gridPos + facingDirection.ToVector()`) boşalınca.
+- **Spawn pozisyonu:** Araç `_gridPos`'a DEĞİL, `_facingCell`'e spawn olur.
+- **Çoklu spawn:** Her `_facingCell` boşalmasında tetiklenir — stok bitene kadar.
+- **Tetiklenince:** `_stockCount--` → `board.SpawnFromGarage(_facingCell, color)` → `OnObstacleTriggered.Raise(payload)` — payload'da `UndoLastSpawn` closure.
+- **Undo (UndoLastSpawn):** `_stockCount++` → `board.RemoveCarAt(_facingCell)` (araç silinir, hücre `isWalkable=true` olur — normal boş hücre).
+- Stok `0` olunca: `IsActive = false`. `_facingCell` normal boş hücre gibi davranır.
+
+### Board — Undo için Ek API
+```csharp
+// Araç pool'a iade edilir, hücre isWalkable=true olur (GarageSpawner undo)
+public bool RemoveCarAt(Vector2Int pos)
+
+// Araç pool'a iade edilir, hücre isWalkable=false KALIR (LockedBox undo)
+public bool RemoveCarAtAndBlock(Vector2Int pos)
+
+// UndoBooster'ın geri koyduğu araç; isWalkable=false set edilir, OnBoardStateChanged fırlatır
+public bool PlaceCarBack(Vector2Int pos, CarColor color)
+```
 
 ### Neden Ortak Interface
-`ILaneObstacle` sayesinde ileride yeni bir engel tipi (örn. "elevator") mevcut sistemlere dokunmadan yeni bir sınıf olarak eklenebilir.
+`ILaneObstacle` sayesinde ileride yeni bir engel tipi mevcut sistemlere dokunmadan yeni bir sınıf olarak eklenebilir.
 
 ---
 
@@ -185,10 +229,14 @@ Holder
 Sistemler birbirini doğrudan çağırmaz, aşağıdaki event'ler üzerinden haberleşir:
 
 ```
-OnCarSelected(Car car)
-OnCarReachedHolder(Car car)
-OnCellVacated(GridCell cell)       // araç board'dan ayrıldı → PathfindingService tetiklenir
+OnBeforeCarRemoved(Car car)        // Board, HandleCarSelected başında (hücre değişmeden önce) fırlatır
+                                   // → UndoBooster snapshot'ı bu event'te alır (race condition önlemi)
+OnCarSelected(Car car)             // oyuncu/booster bir araç seçti
+OnCarReachedHolder(Car car)        // araç holder entry'e ulaştı
+OnCellVacated(GridCell cell)       // araç board'dan ayrıldı → PathfindingService + ILaneObstacle tetiklenir
 OnBoardStateChanged()              // yeni araç eklendi (reveal/spawn) → PathfindingService tetiklenir
+OnObstacleTriggered(ObstacleTriggerPayload)
+                                   // obstacle tetiklendi; payload.UndoAction closure ile geri alınabilir
 OnMatchOccurred(CarColor color)
 OnHolderFull()
 OnGameOver()
@@ -198,9 +246,11 @@ OnBoosterUsed(BoosterType type)
 
 UI, ses sistemi, analytics, spawner mekanikleri bu event'leri dinler; birbirlerinden habersizdir. Yeni bir sistem eklerken mevcut event'lere abone ol, mevcut sınıfları değiştirme.
 
-### Somut İmplementasyon Kararı: ScriptableObject Event Channel
+### Subscriber Sırası (Kritik)
 
-"Event bus" soyut bir kavram olarak kalmasın diye kesin karar: **ScriptableObject tabanlı Event Channel pattern** kullanılacak (Unity projelerinde endüstri standardı, Inspector'dan bağlanabilir, MonoBehaviour'lar arası sıkı bağımlılık yaratmaz).
+`GameEventChannel.Raise()` listener listesini **ters kayıt sırasında** çalıştırır (son kaydeden ilk çalışır). Aynı event'e birden fazla sistem subscribe olduğunda çalışma sırası buradan belirlenir. Sıranın önemli olduğu durumlarda ayrı bir "pre-event" channel tanımlamak tercih edilir (bkz. `OnBeforeCarRemoved`).
+
+### Somut İmplementasyon: ScriptableObject Event Channel
 
 ```
 Core/Events/
@@ -208,43 +258,99 @@ Core/Events/
   CarEventChannel.cs         // GameEventChannel<Car>
   CellEventChannel.cs        // GameEventChannel<GridCell>
   ColorEventChannel.cs       // GameEventChannel<CarColor>
-  VoidEventChannel.cs        // parametresiz event'ler için (OnGameOver, OnLevelComplete, OnBoardStateChanged)
+  VoidEventChannel.cs        // parametresiz event'ler (OnGameOver, OnLevelComplete, OnBoardStateChanged)
+  BoosterEventChannel.cs     // GameEventChannel<BoosterType>
+  ObstacleEventChannel.cs    // GameEventChannel<ObstacleTriggerPayload>
 ```
 
-Her event channel bir `.asset` dosyası olarak `Assets/_Project/Data/EventChannels/` altında saklanır. Yayınlayan (publisher) ve dinleyen (listener) taraflar birbirini hiç tanımaz, sadece aynı `.asset` dosyasına referans verir. Örn: `Board`, `OnCellVacated` channel'ına `Raise()` çağırır; `PathfindingService` ve `ILaneObstacle` implementasyonları aynı channel'ı dinler — ikisi de birbirinden habersizdir.
+Her event channel bir `.asset` dosyası olarak `Assets/_Project/Data/EventChannels/` altında saklanır. Yayınlayan ve dinleyen taraflar birbirini hiç tanımaz, sadece aynı `.asset` dosyasına referans verir.
 
-**Kural:** C#'ın native `event`/`Action` yapısı sadece bir sınıfın kendi iç mantığında (ör. `CarMover` kendi tamamlanma callback'i için) kullanılabilir. Sistemler arası (cross-system) haberleşme HER ZAMAN event channel üzerinden olur.
+**Kural:** C#'ın native `event`/`Action` yapısı sadece bir sınıfın kendi iç mantığında kullanılabilir. Sistemler arası haberleşme HER ZAMAN event channel üzerinden olur.
 
 ---
 
 ## 9. Booster Sistemi
 
-### GameState (Önceden Tanımsızdı — Netleştirildi)
+### GameState
 
 `GameState`, tek bir level oynanışının anlık durumunu tutan basit bir veri sınıfı (POCO, MonoBehaviour değil):
 
 ```
 GameState
-├── currentLevelData: LevelData
-├── movesUsedCount: int
 ├── boosterCounts: Dictionary<BoosterType, int>   // oyuncunun elindeki booster sayısı
 ├── isGameOver: bool
 └── isLevelComplete: bool
 ```
 
-`GameManager` bu sınıfın tek sahibi ve yaşam döngüsünü yönetir (level başlarken oluşturur, level bitince serbest bırakır). Booster'lar ve diğer sistemler `GameState`'i sadece `GameManager` üzerinden okur/günceller, kendi kopyalarını tutmaz.
+`GameManager` bu sınıfın tek sahibi. Booster'lar `GameState`'i sadece `Execute(board, state)` parametresi üzerinden alır, kendi referanslarını tutmaz.
+
+### IBooster
+
+```csharp
+public interface IBooster
+{
+    bool Execute(Board board, GameState state);
+}
+```
+
+`Execute` **`bool` döner**: `true` → booster gerçekten etki etti, `GameManager` stoku azaltır ve `OnBoosterUsed` fırlatır. `false` → hiçbir şey yapmadı (geçerli hedef yok, sıra dolu vb.), stok **harcanmaz**. GameManager bu dönen değere bakarak stok azaltma/event fırlatma kararını verir.
+
+### Undo Booster
+
+**Memento + closure hibrit pattern:**
+
+1. `OnBeforeCarRemoved` event'ine subscribe olur; her araç seçiminden önce `RecordSnapshot()` çalışır (araç pozisyonu + rengi kaydedilir, `_pendingObstacleUndos` listesi sıfırlanır).
+2. `OnObstacleTriggered` event'ine subscribe olur; tetiklenen obstacle'ların `UndoAction` closure'ları `_pendingObstacleUndos` listesine eklenir.
+3. `Execute()` çağrısında: obstacle undo'lar ters sırayla çalışır → holder'dan son araç çıkarılır → araç board'a geri konulur (`PlaceCarBack`).
+
+`OnBeforeCarRemoved` kullanılmasının nedeni: `OnCarSelected`'a subscribe olunursa, Board'un kendi `HandleCarSelected` handler'ı (aynı event'te) GarageSpawner'ı tetikleyip `OnObstacleTriggered` fırlattıktan sonra RecordSnapshot çalışabilir; bu durumda `Clear()` closure'ı siler. `OnBeforeCarRemoved`, herhangi bir hücre değişmeden önce ateşlenir — snapshot sırası garantilenir.
 
 ```
-IBooster
-└── Execute(Board board, GameState state): void
+Execute() akışı:
+  1. _pendingObstacleUndos (ters sıra) → her closure.Invoke()
+  2. _holder.TryRemoveLastAdded()
+  3. board.PlaceCarBack(_snapshotPos, _snapshotColor)
 ```
 
-- **Undo:** son hamleyi geri alır (board'un bir önceki state snapshot'ını tutmak gerekir — basit bir memento pattern).
-- **Shuffle:** board'daki araçların renk/pozisyonlarını yeniden dağıtır (kilit/garaj durumları korunur), sonrasında `PathfindingService.RecalculateReachability()` tekrar çağrılır.
-- **Super Undo:** seçili aracı geçici bir "bekleme" slotuna alır.
-- **Magnet:** aynı renkteki erişilebilir arabaları highlight eder/otomatik seçer.
+### Shuffle Booster
 
-Her booster event bus üzerinden `OnBoosterUsed` fırlatır, kendi mantığını board üzerinde uygular.
+Board'daki tüm dolu hücreleri toplar, Fisher-Yates ile renkleri karıştırır, araçları pool'a iade edip yeni renklerde yeniden spawn eder. `OnBoardStateChanged` fırlatır → PathfindingService recalculate. Her zaman `true` döner.
+
+### Super Undo Booster
+
+**Aktif seçim mekanizması:** `Execute()` çağrısında `_holder.SetNextCarInterceptor(PlaceInReserve)` set edilir. Bir sonraki araç `OnCarReachedHolder`'a ulaştığında Holder onu normal akışa sokmak yerine `PlaceInReserve`'e yönlendirir.
+
+`PlaceInReserve(Car car)`:
+- `car.IsReachable = false` — `GameInputHandler` tıklamayı reddeder.
+- `car.GetComponent<Collider>().enabled = false` — fizik raycast'e yakalanmaz (çift koruma).
+- Araç `_reserveSlotTransform.position`'a taşınır.
+
+`ReleaseReserve()`:
+- `collider.enabled = true` — pool'a geri döndüğünde collider temiz olsun.
+- `_holder.ForceAddCar(car)` — araç normal holder akışına (InsertIntoSlot + ResolveMatches) girer.
+
+`Execute()` zaten aktifken (`_isActive = true`) veya rezervde araç varken `false` döner, stok harcanmaz.
+
+### Magnet Booster
+
+**Kuyruk tabanlı sıralı gönderim:** Tüm hedef araçlar aynı anda değil, **birer birer** gönderilir; bir önceki araç holder'a ulaşınca sıradaki gönderilir.
+
+```
+Durum değişkenleri:
+  _magnetQueue: Queue<Car>       — gönderilmeyi bekleyen araçlar
+  _inFlightCars: HashSet<Car>    — kuyruğa alınan araçların takip seti
+```
+
+Akış:
+1. `Execute()`: hedef rengi belirle (Holder'daki renk sayısına göre, yoksa board'daki erişilebilir renkler), tüm hedefleri `_magnetQueue` ve `_inFlightCars`'a ekle, `SendNext()` çağır.
+2. `SendNext()`: kuyruktan bir araç çıkar, `OnCarSelected.Raise()` ile gönder.
+3. `OnMagnetCarReachedHolder(Car car)`: `_inFlightCars.Contains(car)` ile bu araç bizim mi kontrol et; evet ise `_inFlightCars.Remove(car)` → `SendNext()`.
+
+`OnCarReachedHolder` tüm araçlar için fırladığından `_inFlightCars` filtresi zorunludur — başka bir araç holder'a ulaşırsa yanlış `SendNext()` tetiklenmez.
+
+Sıra devam ederken `Execute()` yeniden çağrılırsa `false` döner, stok harcanmaz.
+
+**Renk seçim önceliği:** Holder'daki en çok tekrar eden renk; holder boşsa board'daki en çok erişilebilir renk. Seçilen renkte erişilebilir araç yoksa sonraki adaya geçilir; hiçbir aday yoksa `false` döner.
 
 ---
 

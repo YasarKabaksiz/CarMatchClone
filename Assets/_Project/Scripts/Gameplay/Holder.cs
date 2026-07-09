@@ -17,6 +17,8 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private ObjectPoolManager _poolManager;
 
         private Car[] _slots;
+        private Car _lastAddedCar;
+        private System.Action<Car> _nextCarInterceptor;
 
         public bool IsFull
         {
@@ -47,6 +49,15 @@ namespace CarMatchClone.Gameplay
 
         private void HandleCarReachedHolder(Car car)
         {
+            // SuperUndoBooster bir sonraki aracı yakalar; normal akış atlanır.
+            if (_nextCarInterceptor != null)
+            {
+                var interceptor = _nextCarInterceptor;
+                _nextCarInterceptor = null;
+                interceptor(car);
+                return;
+            }
+
             car.IsReachable = false;
 
             if (IsFull)
@@ -105,6 +116,7 @@ namespace CarMatchClone.Gameplay
                 _slots[i] = _slots[i - 1];
 
             _slots[insertAt] = car;
+            _lastAddedCar = car;
         }
 
         private void ResolveMatches()
@@ -142,6 +154,58 @@ namespace CarMatchClone.Gameplay
             {
                 if (_slots[i] != null)
                     _slots[i].transform.position = _slotTransforms[i].position;
+            }
+        }
+
+        // UndoBooster: en son eklenen aracı holder'dan çıkarır ve pool'a bırakır.
+        public bool TryRemoveLastAdded()
+        {
+            if (_lastAddedCar == null) return false;
+
+            for (int i = 0; i < _maxSlots; i++)
+            {
+                if (_slots[i] == _lastAddedCar)
+                {
+                    _poolManager.Release(_lastAddedCar.SourcePrefab, _lastAddedCar.gameObject);
+                    _slots[i] = null;
+                    _lastAddedCar = null;
+                    CompactSlots();
+                    SnapAllCars();
+                    return true;
+                }
+            }
+
+            _lastAddedCar = null;
+            return false;
+        }
+
+        // SuperUndoBooster: bir sonraki holder'a gelen aracı yakalar; tek seferlik.
+        public void SetNextCarInterceptor(System.Action<Car> interceptor)
+        {
+            _nextCarInterceptor = interceptor;
+        }
+
+        // MagnetBooster: holder'daki dolu slotların renklerini döndürür.
+        public CarMatchClone.Data.CarColor[] GetOccupiedColors()
+        {
+            var result = new System.Collections.Generic.List<CarMatchClone.Data.CarColor>();
+            for (int i = 0; i < _maxSlots; i++)
+                if (_slots[i] != null) result.Add(_slots[i].Color);
+            return result.ToArray();
+        }
+
+        // SuperUndoBooster: rezerv slottan geri gelen aracı normal akışla holder'a ekler.
+        public void ForceAddCar(Car car)
+        {
+            if (IsFull) return;
+            car.IsReachable = false;
+            InsertIntoSlot(car);
+            SnapAllCars();
+            ResolveMatches();
+            if (IsFull)
+            {
+                _onHolderFullChannel.Raise();
+                _onGameOverChannel.Raise();
             }
         }
 

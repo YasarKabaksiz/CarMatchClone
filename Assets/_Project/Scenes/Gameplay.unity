@@ -182,6 +182,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.GameManager
   _onGameOverChannel: {fileID: 11400000, guid: eee5c3719b03b574297a7e5fad7b95e6, type: 2}
   _onLevelCompleteChannel: {fileID: 11400000, guid: 153964fee8aeabf40b3c2d78f1a8d91c, type: 2}
+  _onBoosterUsedChannel: {fileID: 11400000, guid: 0920ee7dd98fbb943862c34783b19c39, type: 2}
+  _debugLogging: 0
+  _board: {fileID: 551604615}
+  _undoBooster: {fileID: 1722630790}
+  _shuffleBooster: {fileID: 1722630789}
+  _superUndoBooster: {fileID: 1722630788}
+  _magnetBooster: {fileID: 1722630787}
 --- !u!1 &46033766
 GameObject:
   m_ObjectHideFlags: 0
@@ -632,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 842f0661d71ee7e4ebb1e4f7eab2307f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Board.Board
-  _levelData: {fileID: 11400000, guid: 4f6434cb1aafc2745a6729245153df69, type: 2}
+  _levelData: {fileID: 11400000, guid: 1be6316447d3c734a8ab0c7116f7183a, type: 2}
   _carPrefabs:
   - color: 2
     prefab: {fileID: 1720168925863219082, guid: bd5e13498f71bc440bccd96cea889f70, type: 3}
@@ -651,9 +658,11 @@ MonoBehaviour:
   _onCellVacatedChannel: {fileID: 11400000, guid: 745a464abe0bb99459673f17fc44670a, type: 2}
   _onLevelCompleteChannel: {fileID: 11400000, guid: 153964fee8aeabf40b3c2d78f1a8d91c, type: 2}
   _onBoardStateChangedChannel: {fileID: 11400000, guid: ad0863d3ad9308044b39d1175b905788, type: 2}
+  _onBeforeCarRemovedChannel: {fileID: 11400000, guid: 135b16306f7bc9a42b6f7e56f951782c, type: 2}
   _wallPrefab: {fileID: 881832274214534658, guid: 4452f787bb138624da30538a9927a0ad, type: 3}
   _lockedBoxPrefab: {fileID: 3941007886982684768, guid: 43bc0303240d85d4a90a7f45da3e45ce, type: 3}
   _garageSpawnerPrefab: {fileID: 4599023456713951204, guid: bab4346d23d4a71408cddd5c2a5ff521, type: 3}
+  _onObstacleTriggeredChannel: {fileID: 11400000, guid: 1bde4c170556b624f93f59f7e450db9b, type: 2}
 --- !u!1 &662793223
 GameObject:
   m_ObjectHideFlags: 0
@@ -1015,6 +1024,146 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1685556024
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1685556025}
+  m_Layer: 0
+  m_Name: ReserveSlot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1685556025
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1685556024}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5, y: 0, z: -7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1722630785
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1722630791}
+  - component: {fileID: 1722630790}
+  - component: {fileID: 1722630789}
+  - component: {fileID: 1722630788}
+  - component: {fileID: 1722630787}
+  - component: {fileID: 1722630786}
+  m_Layer: 0
+  m_Name: BoosterSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1722630786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b2b71cfac167104d98dc1c60ca831b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Boosters.BoosterTester
+  _gameManager: {fileID: 11102827}
+  _superUndoBooster: {fileID: 1722630788}
+--- !u!114 &1722630787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90a76d10cda561941842403fec68780f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Boosters.MagnetBooster
+  _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
+  _holder: {fileID: 1910141176}
+  _debugLogging: 1
+--- !u!114 &1722630788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7426c007edaaff4093467bc8f2c2c3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Boosters.SuperUndoBooster
+  _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _holder: {fileID: 1910141176}
+  _reserveSlotTransform: {fileID: 1685556025}
+--- !u!114 &1722630789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d46ef6af305dce42864637325b011c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Boosters.ShuffleBooster
+--- !u!114 &1722630790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b344b97ad9ccc7498c1d7cc07abd7af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Boosters.UndoBooster
+  _onBeforeCarRemovedChannel: {fileID: 11400000, guid: 135b16306f7bc9a42b6f7e56f951782c, type: 2}
+  _onObstacleTriggeredChannel: {fileID: 11400000, guid: 1bde4c170556b624f93f59f7e450db9b, type: 2}
+  _holder: {fileID: 1910141176}
+  _debugLogging: 1
+--- !u!4 &1722630791
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722630785}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1893185281
 GameObject:
   m_ObjectHideFlags: 0
@@ -1126,3 +1275,5 @@ SceneRoots:
   - {fileID: 1910141175}
   - {fileID: 1670938171}
   - {fileID: 670052068}
+  - {fileID: 1722630791}
+  - {fileID: 1685556025}

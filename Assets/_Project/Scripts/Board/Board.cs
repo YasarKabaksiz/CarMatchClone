@@ -26,9 +26,12 @@ namespace CarMatchClone.Board
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
         [SerializeField] private VoidEventChannel _onBoardStateChangedChannel;
 
+        [SerializeField] private CarEventChannel _onBeforeCarRemovedChannel;
+
         [SerializeField] private GameObject _wallPrefab;
         [SerializeField] private GameObject _lockedBoxPrefab;
         [SerializeField] private GameObject _garageSpawnerPrefab;
+        [SerializeField] private CarMatchClone.Core.Events.ObstacleEventChannel _onObstacleTriggeredChannel;
 
         private Dictionary<Vector2Int, GridCell> _cells;
         private Dictionary<CarColor, GameObject> _prefabByColor;
@@ -74,6 +77,9 @@ namespace CarMatchClone.Board
 
         private void HandleCarSelected(Car car)
         {
+            // UndoBooster'ın snapshot'ı alması için hücre boşaltılmadan önce event fırlatılır.
+            _onBeforeCarRemovedChannel?.Raise(car);
+
             var cell = GetCell(car.GridPosition);
             if (cell == null) return;
 
@@ -187,6 +193,7 @@ namespace CarMatchClone.Board
             var lb = obj.GetComponent<LockedBox>();
             if (lb == null) { Debug.LogError("[Board] LockedBox prefab üzerinde LockedBox component yok."); return; }
             lb.Initialize(entry.position, this, _onCellVacatedChannel);
+            lb.SetObstacleChannel(_onObstacleTriggeredChannel);
             _obstacles.Add(lb);
         }
 
@@ -202,7 +209,7 @@ namespace CarMatchClone.Board
             var gs = obj.GetComponent<GarageSpawner>();
             if (gs == null) { Debug.LogError("[Board] GarageSpawner prefab üzerinde GarageSpawner component yok."); return; }
             gs.Initialize(entry.position, this, _onCellVacatedChannel);
-            gs.Setup(entry.color, entry.facingDirection, entry.garageStockCount);
+            gs.Setup(entry.color, entry.facingDirection, entry.garageStockCount, _onObstacleTriggeredChannel);
             _obstacles.Add(gs);
         }
 
@@ -257,6 +264,78 @@ namespace CarMatchClone.Board
             if (cell == null || cell.Occupant != null) return;
 
             SpawnCarAtCell(cell, color);
+            _onBoardStateChangedChannel?.Raise();
+        }
+
+        // UndoBooster: GarageSpawner undo — spawned aracı siler, hücreyi walkable yapar.
+        // OnBoardStateChanged FIRALATMAZ — akış sonunda PlaceCarBack zaten tetikler.
+        public bool RemoveCarAt(Vector2Int pos)
+        {
+            var cell = GetCell(pos);
+            if (cell == null || cell.Occupant == null) return false;
+            _poolManager.Release(cell.Occupant.SourcePrefab, cell.Occupant.gameObject);
+            cell.Occupant = null;
+            cell.IsWalkable = true;
+            return true;
+        }
+
+        // UndoBooster: LockedBox undo — revealed aracı siler, hücre BLOKE kalır.
+        // LockedBox hücresi kutu aktifken hiçbir zaman walkable olmamalı.
+        public bool RemoveCarAtAndBlock(Vector2Int pos)
+        {
+            var cell = GetCell(pos);
+            if (cell == null || cell.Occupant == null) return false;
+            _poolManager.Release(cell.Occupant.SourcePrefab, cell.Occupant.gameObject);
+            cell.Occupant = null;
+            cell.IsWalkable = false;
+            return true;
+        }
+
+        // UndoBooster: son hamlede boşalan hücreye aracı geri koyar.
+        public bool PlaceCarBack(Vector2Int pos, CarColor color)
+        {
+            var cell = GetCell(pos);
+            if (cell == null || cell.Occupant != null) return false;
+
+            cell.IsWalkable = false;
+            SpawnCarAtCell(cell, color);
+            _onBoardStateChangedChannel?.Raise();
+            return true;
+        }
+
+        // ShuffleBooster: board'daki mevcut araçların renklerini Fisher-Yates ile karıştırır.
+        public void ShuffleCarColors()
+        {
+            var occupiedCells = new List<GridCell>();
+            var colors = new List<CarColor>();
+
+            foreach (var cell in _cells.Values)
+            {
+                if (cell.Occupant != null)
+                {
+                    occupiedCells.Add(cell);
+                    colors.Add(cell.Occupant.Color);
+                }
+            }
+
+            if (occupiedCells.Count <= 1) return;
+
+            foreach (var cell in occupiedCells)
+            {
+                _poolManager.Release(cell.Occupant.SourcePrefab, cell.Occupant.gameObject);
+                cell.Occupant = null;
+            }
+
+            var rng = new System.Random();
+            for (int i = colors.Count - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                var tmp = colors[i]; colors[i] = colors[j]; colors[j] = tmp;
+            }
+
+            for (int i = 0; i < occupiedCells.Count; i++)
+                SpawnCarAtCell(occupiedCells[i], colors[i]);
+
             _onBoardStateChangedChannel?.Raise();
         }
 
