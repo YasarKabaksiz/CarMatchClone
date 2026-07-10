@@ -215,6 +215,21 @@ namespace CarMatchClone.Gameplay
             _onHolderProcessedChannel?.Raise();
         }
 
+        // Retry/Level Complete: tüm slotları boşaltır, araçları pool'a iade eder.
+        public void ClearAllSlots()
+        {
+            for (int i = 0; i < _maxSlots; i++)
+            {
+                if (_slots[i] != null)
+                {
+                    _poolManager.Release(_slots[i].SourcePrefab, _slots[i].gameObject);
+                    _slots[i] = null;
+                }
+            }
+            _lastAddedCar = null;
+            _nextCarInterceptor = null;
+        }
+
         public Bounds GetBounds()
         {
             if (_slotTransforms == null || _slotTransforms.Length == 0)

@@ -4,6 +4,7 @@ using CarMatchClone.Boosters;
 using CarMatchClone.Core.Events;
 using CarMatchClone.Core.SaveSystem;
 using CarMatchClone.Data;
+using CarMatchClone.Gameplay;
 
 namespace CarMatchClone.Core
 {
@@ -17,6 +18,8 @@ namespace CarMatchClone.Core
         [SerializeField] private BoosterEventChannel _onBoosterRequestedChannel;
         [SerializeField] private BoosterCountEventChannel _onBoosterCountChangedChannel;
         [SerializeField] private IntEventChannel _onCoinsChangedChannel;
+        [SerializeField] private VoidEventChannel _onLevelContinueRequestedChannel;
+        [SerializeField] private VoidEventChannel _onRetryRequestedChannel;
         [SerializeField] private bool _debugLogging;
 
         [Header("Level Sırası")]
@@ -24,6 +27,7 @@ namespace CarMatchClone.Core
 
         [Header("Referanslar")]
         [SerializeField] private CarMatchClone.Board.Board _board;
+        [SerializeField] private Holder _holder;
         [SerializeField] private SaveManager _saveManager;
 
         [Header("Booster Referansları")]
@@ -61,6 +65,8 @@ namespace CarMatchClone.Core
             _onLevelCompleteChannel.Subscribe(HandleLevelComplete);
             _onHolderProcessedChannel.Subscribe(HandleHolderProcessed);
             _onBoosterRequestedChannel?.Subscribe(HandleBoosterRequested);
+            _onLevelContinueRequestedChannel?.Subscribe(HandleLevelContinueRequested);
+            _onRetryRequestedChannel?.Subscribe(HandleRetryRequested);
         }
 
         private void OnDisable()
@@ -69,6 +75,8 @@ namespace CarMatchClone.Core
             _onLevelCompleteChannel.Unsubscribe(HandleLevelComplete);
             _onHolderProcessedChannel.Unsubscribe(HandleHolderProcessed);
             _onBoosterRequestedChannel?.Unsubscribe(HandleBoosterRequested);
+            _onLevelContinueRequestedChannel?.Unsubscribe(HandleLevelContinueRequested);
+            _onRetryRequestedChannel?.Unsubscribe(HandleRetryRequested);
         }
 
         private void OnApplicationPause(bool paused)
@@ -174,8 +182,22 @@ namespace CarMatchClone.Core
             SaveProgress();
 
             if (_debugLogging)
-                Debug.Log($"[GameManager] Level Complete! Sonraki: {_currentLevelIndex}");
+                Debug.Log($"[GameManager] Level Complete — index {_currentLevelIndex - 1} bitti, popup bekleniyor.");
+            // Reset + Load, OnLevelContinueRequested gelince yapılır.
+        }
 
+        private void HandleLevelContinueRequested()
+        {
+            if (_debugLogging)
+                Debug.Log($"[GameManager] Continue → level yükleniyor: index={_currentLevelIndex}");
+            ResetLevelState();
+            LoadCurrentLevel();
+        }
+
+        private void HandleRetryRequested()
+        {
+            if (_debugLogging)
+                Debug.Log($"[GameManager] Retry → level yeniden yükleniyor: index={_currentLevelIndex}");
             ResetLevelState();
             LoadCurrentLevel();
         }
@@ -198,6 +220,7 @@ namespace CarMatchClone.Core
             _gameState.IsLevelComplete = false;
             _gameState.IsGameOver = false;
             _gameState.MovesUsedCount = 0;
+            _holder?.ClearAllSlots();
             // BoosterCounts ve Coins level'lar arası korunur.
         }
 
