@@ -267,6 +267,16 @@ OnBoosterUsed(BoosterType type)
 
 UI, ses sistemi, analytics, spawner mekanikleri bu event'leri dinler; birbirlerinden habersizdir. Yeni bir sistem eklerken mevcut event'lere abone ol, mevcut sınıfları değiştirme.
 
+### Dinleyicisi Olmayan Event'ler (Bilerek Hazırlanmış Bağlantı Noktaları)
+
+Aşağıdaki event'ler raise edilmekte ama şu an hiçbir sistem subscribe olmamaktadır. **Silinmemeli** — ilerideki milestone'lar için hazır bırakılmıştır:
+
+| Event | Raise Eden | Hedef Milestone |
+|---|---|---|
+| `OnBoosterUsed(BoosterType)` | `GameManager.UseBooster()` | M9 — HUD'da kalan booster sayısını güncelle |
+| `OnMatchOccurred(CarColor)` | `Holder.ResolveMatches()` | M9/M11 — match VFX, ses efekti, combo sayacı |
+| `OnHolderFull()` | `Holder` (Game Over öncesi) | M9/M11 — "holder dolu" uyarı animasyonu, ses |
+
 ### Subscriber Sırası (Kritik)
 
 `GameEventChannel.Raise()` listener listesini **ters kayıt sırasında** çalıştırır (son kaydeden ilk çalışır). Aynı event'e birden fazla sistem subscribe olduğunda çalışma sırası buradan belirlenir. Sıranın önemli olduğu durumlarda ayrı bir "pre-event" channel tanımlamak tercih edilir (bkz. `OnBeforeCarRemoved`).

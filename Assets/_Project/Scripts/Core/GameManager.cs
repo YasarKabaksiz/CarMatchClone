@@ -14,6 +14,9 @@ namespace CarMatchClone.Core
         [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private VoidEventChannel _onNewLevelLoadedChannel;
         [SerializeField] private BoosterEventChannel _onBoosterUsedChannel;
+        [SerializeField] private BoosterEventChannel _onBoosterRequestedChannel;
+        [SerializeField] private BoosterCountEventChannel _onBoosterCountChangedChannel;
+        [SerializeField] private IntEventChannel _onCoinsChangedChannel;
         [SerializeField] private bool _debugLogging;
 
         [Header("Level Sırası")]
@@ -57,6 +60,7 @@ namespace CarMatchClone.Core
             _onGameOverChannel.Subscribe(HandleGameOver);
             _onLevelCompleteChannel.Subscribe(HandleLevelComplete);
             _onHolderProcessedChannel.Subscribe(HandleHolderProcessed);
+            _onBoosterRequestedChannel?.Subscribe(HandleBoosterRequested);
         }
 
         private void OnDisable()
@@ -64,6 +68,7 @@ namespace CarMatchClone.Core
             _onGameOverChannel.Unsubscribe(HandleGameOver);
             _onLevelCompleteChannel.Unsubscribe(HandleLevelComplete);
             _onHolderProcessedChannel.Unsubscribe(HandleHolderProcessed);
+            _onBoosterRequestedChannel?.Unsubscribe(HandleBoosterRequested);
         }
 
         private void OnApplicationPause(bool paused)
@@ -97,6 +102,7 @@ namespace CarMatchClone.Core
 
             _board.RebuildGrid(level);
             _onNewLevelLoadedChannel?.Raise();
+            BroadcastGameState();
 
             if (_debugLogging)
                 Debug.Log($"[GameManager] Level yüklendi: index={_currentLevelIndex}, name={level.name}");
@@ -134,9 +140,16 @@ namespace CarMatchClone.Core
             {
                 _gameState.BoosterCounts[type]--;
                 _onBoosterUsedChannel?.Raise(type);
+                _onBoosterCountChangedChannel?.Raise(new BoosterCountPayload
+                {
+                    Type = type,
+                    Count = _gameState.BoosterCounts[type]
+                });
                 SaveProgress();
             }
         }
+
+        private void HandleBoosterRequested(BoosterType type) => UseBooster(type);
 
         // ── Event handler'lar ───────────────────────────────────────────────
 
@@ -165,6 +178,19 @@ namespace CarMatchClone.Core
 
             ResetLevelState();
             LoadCurrentLevel();
+        }
+
+        private void BroadcastGameState()
+        {
+            foreach (var kvp in _gameState.BoosterCounts)
+            {
+                _onBoosterCountChangedChannel?.Raise(new BoosterCountPayload
+                {
+                    Type = kvp.Key,
+                    Count = kvp.Value
+                });
+            }
+            _onCoinsChangedChannel?.Raise(_gameState.Coins);
         }
 
         private void ResetLevelState()
