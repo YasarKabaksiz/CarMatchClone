@@ -461,3 +461,27 @@ Core/Pooling/
 - Her görev öncesi bu dosya referans gösterilmeli ("ARCHITECTURE.md'deki Bölüm X'e göre..." şeklinde).
 - Yeni bir sistem eklenirken mevcut event bus ve interface'ler kullanılmalı, yeni bağımlılık (tight coupling) yaratılmamalı.
 - Değişiklik sonrası: "bu değişiklik ARCHITECTURE.md'deki plana uygun mu, sapma var mı" kontrolü yapılmalı.
+
+---
+
+## 15. UI Tasarım Sistemi
+
+### Asset Paketi
+
+**Kenney UI Pack** (CC0 lisans) kullanılıyor. Dosya konumu: `Assets/_Project/Art/UIKit/`
+
+### Renk–Anlam Eşleştirmesi
+
+| Renk | Kullanım Alanı |
+|---|---|
+| **Mavi** | Ana aksiyon: Continue, Play, booster butonları |
+| **Kırmızı** | Acil/olumsuz aksiyon: Retry |
+| **Gri** | İkincil/nötr aksiyon: Ana Menüye Dön, kilitli level overlay |
+| **Sarı** | Ödül/vurgu: coin göstergesi, Level Complete başlığı |
+| **Yeşil** | Şimdilik kullanılmıyor — ileride "satın alındı" gibi onay durumları için ayrılmış |
+
+**Kural:** Bu eşleştirme tüm UI ekranlarında (HUD, popup'lar, ana menü) tutarlı biçimde uygulanmalıdır. Renk–anlam ilişkisi bozulmamalı; yeni bir ekrana yeni renk anlamı eklenmeden önce bu tabloya eklenmeli.
+
+### Tipografi
+
+Kenney UI Pack içindeki TTF dosyası, TextMeshPro Font Asset'e çevrilerek kullanılıyor. Tüm UI metinleri bu TMP Font Asset'i referans alır; Unity'nin varsayılan fontu kullanılmaz.

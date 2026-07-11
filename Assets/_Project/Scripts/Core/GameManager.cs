@@ -29,7 +29,6 @@ namespace CarMatchClone.Core
         [SerializeField] private CarMatchClone.Board.Board _board;
         [SerializeField] private Holder _holder;
         [SerializeField] private SaveManager _saveManager;
-        [SerializeField] private LevelTransitionData _levelTransitionData;
 
         [Header("Booster Referansları")]
         [SerializeField] private UndoBooster _undoBooster;
@@ -238,13 +237,6 @@ namespace CarMatchClone.Core
 
             var data = _saveManager.Load();
             _currentLevelIndex = data.currentLevelIndex;
-
-            if (_levelTransitionData != null && _levelTransitionData.HasPendingSelection)
-            {
-                _currentLevelIndex = _levelTransitionData.SelectedLevelIndex;
-                _levelTransitionData.HasPendingSelection = false;
-            }
-
             _gameState.Coins = data.coins;
 
             if (data.boosters != null && data.boosters.Count > 0)
