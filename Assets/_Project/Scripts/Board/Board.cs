@@ -198,7 +198,7 @@ namespace CarMatchClone.Board
                 Debug.LogWarning($"[Board] LockedBox prefab atanmamış — {entry.position} hücresi atlandı.");
                 return;
             }
-            var obj = Instantiate(_lockedBoxPrefab, GridToWorld(entry.position), Quaternion.identity, transform);
+            var obj = Instantiate(_lockedBoxPrefab, GridToWorld(entry.position), _lockedBoxPrefab.transform.rotation, transform);
             obj.name = $"LockedBox_{entry.position.x}_{entry.position.y}";
             var lb = obj.GetComponent<LockedBox>();
             if (lb == null) { Debug.LogError("[Board] LockedBox prefab üzerinde LockedBox component yok."); return; }
