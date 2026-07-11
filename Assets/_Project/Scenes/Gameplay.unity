@@ -322,6 +322,7 @@ MonoBehaviour:
   _onBoosterRequestedChannel: {fileID: 11400000, guid: c9efe9ae0bdda4e46a95aa7f5553f7b9, type: 2}
   _onBoosterCountChangedChannel: {fileID: 11400000, guid: add16681fb826c047b393a7c1f0cb661, type: 2}
   _onCoinsChangedChannel: {fileID: 11400000, guid: 2d103677feb1c5f4990902068c225777, type: 2}
+  _onCoinRewardEarnedChannel: {fileID: 11400000, guid: db1221a5ae0f2444db15e2e697f06e1d, type: 2}
   _onLevelContinueRequestedChannel: {fileID: 11400000, guid: 012b4540049a4d540971da5781bc1fb8, type: 2}
   _onRetryRequestedChannel: {fileID: 11400000, guid: 1c8449fc1c03c8b4b85f7577d7c26137, type: 2}
   _debugLogging: 0
@@ -333,6 +334,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1cf048be830733640bd91b155e55a79f, type: 2}
   - {fileID: 11400000, guid: 4f6434cb1aafc2745a6729245153df69, type: 2}
   - {fileID: 11400000, guid: 3fddf422d91abb141ac9c3d77031dd92, type: 2}
+  _levelCoinReward: 20
   _board: {fileID: 551604615}
   _holder: {fileID: 1910141176}
   _saveManager: {fileID: 221168564}
@@ -2658,6 +2660,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.UI.LevelCompletePopup
   _onLevelCompleteChannel: {fileID: 11400000, guid: 153964fee8aeabf40b3c2d78f1a8d91c, type: 2}
   _onLevelContinueRequestedChannel: {fileID: 11400000, guid: 012b4540049a4d540971da5781bc1fb8, type: 2}
+  _onCoinRewardEarnedChannel: {fileID: 11400000, guid: db1221a5ae0f2444db15e2e697f06e1d, type: 2}
   _popupPanel: {fileID: 556315628}
   _coinRewardText: {fileID: 1420733849}
 --- !u!1 &1368209354
@@ -2974,7 +2977,7 @@ MonoBehaviour:
   - {fileID: 2138196885}
   - {fileID: 1706271901}
   - {fileID: 1368209356}
-  _coinText: {fileID: 0}
+  _coinText: {fileID: 1909906974}
 --- !u!1 &1418967212
 GameObject:
   m_ObjectHideFlags: 0
@@ -3141,7 +3144,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 282.27}
-  m_SizeDelta: {x: 300, y: 100}
+  m_SizeDelta: {x: 600, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1431188954
 GameObject:
@@ -4536,6 +4539,6 @@ SceneRoots:
   - {fileID: 1722630791}
   - {fileID: 1685556025}
   - {fileID: 1670938171}
+  - {fileID: 447253786}
   - {fileID: 1945997749}
   - {fileID: 1381048908}
-  - {fileID: 447253786}

@@ -18,12 +18,14 @@ namespace CarMatchClone.Core
         [SerializeField] private BoosterEventChannel _onBoosterRequestedChannel;
         [SerializeField] private BoosterCountEventChannel _onBoosterCountChangedChannel;
         [SerializeField] private IntEventChannel _onCoinsChangedChannel;
+        [SerializeField] private IntEventChannel _onCoinRewardEarnedChannel;
         [SerializeField] private VoidEventChannel _onLevelContinueRequestedChannel;
         [SerializeField] private VoidEventChannel _onRetryRequestedChannel;
         [SerializeField] private bool _debugLogging;
 
         [Header("Level Sırası")]
         [SerializeField] private LevelData[] _levels;
+        [SerializeField] private int _levelCoinReward = 20;
 
         [Header("Referanslar")]
         [SerializeField] private CarMatchClone.Board.Board _board;
@@ -178,11 +180,15 @@ namespace CarMatchClone.Core
         private void HandleLevelComplete()
         {
             _gameState.IsLevelComplete = true;
+            _gameState.Coins += _levelCoinReward;
             _currentLevelIndex++;
+
+            _onCoinRewardEarnedChannel?.Raise(_levelCoinReward);
+            _onCoinsChangedChannel?.Raise(_gameState.Coins);
             SaveProgress();
 
             if (_debugLogging)
-                Debug.Log($"[GameManager] Level Complete — index {_currentLevelIndex - 1} bitti, popup bekleniyor.");
+                Debug.Log($"[GameManager] Level Complete — index {_currentLevelIndex - 1} bitti, +{_levelCoinReward} coin (toplam: {_gameState.Coins}).");
             // Reset + Load, OnLevelContinueRequested gelince yapılır.
         }
 

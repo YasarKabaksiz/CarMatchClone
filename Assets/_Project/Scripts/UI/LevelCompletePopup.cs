@@ -8,6 +8,7 @@ namespace CarMatchClone.UI
     {
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
         [SerializeField] private VoidEventChannel _onLevelContinueRequestedChannel;
+        [SerializeField] private IntEventChannel _onCoinRewardEarnedChannel;
 
         [SerializeField] private GameObject _popupPanel;
         [SerializeField] private TMP_Text _coinRewardText;
@@ -15,21 +16,29 @@ namespace CarMatchClone.UI
         private void Awake()
         {
             _popupPanel.SetActive(false);
-            _onLevelCompleteChannel.Subscribe(Show);
         }
 
-        private void OnDestroy()
+        private void OnEnable()
+        {
+            _onLevelCompleteChannel.Subscribe(Show);
+            _onCoinRewardEarnedChannel?.Subscribe(HandleCoinReward);
+        }
+
+        private void OnDisable()
         {
             _onLevelCompleteChannel.Unsubscribe(Show);
+            _onCoinRewardEarnedChannel?.Unsubscribe(HandleCoinReward);
         }
 
         private void Show()
         {
-            // Coin kazanma mekaniği M10'da eklenecek.
-            if (_coinRewardText != null)
-                _coinRewardText.text = "+0";
-
             _popupPanel.SetActive(true);
+        }
+
+        private void HandleCoinReward(int amount)
+        {
+            if (_coinRewardText != null)
+                _coinRewardText.text = $"+{amount}";
         }
 
         // Continue butonunun onClick'ine bağlanır.

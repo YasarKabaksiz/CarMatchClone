@@ -262,6 +262,7 @@ OnMatchOccurred(CarColor color)
 OnHolderFull()
 OnGameOver()
 OnLevelComplete()
+OnCoinRewardEarned(int amount)    // Level Complete'te kazanılan coin miktarı (delta); LevelCompletePopup dinler
 OnBoosterUsed(BoosterType type)
 ```
 
@@ -273,9 +274,9 @@ Aşağıdaki event'ler raise edilmekte ama şu an hiçbir sistem subscribe olmam
 
 | Event | Raise Eden | Hedef Milestone |
 |---|---|---|
-| `OnBoosterUsed(BoosterType)` | `GameManager.UseBooster()` | M9 — HUD'da kalan booster sayısını güncelle |
-| `OnMatchOccurred(CarColor)` | `Holder.ResolveMatches()` | M9/M11 — match VFX, ses efekti, combo sayacı |
-| `OnHolderFull()` | `Holder` (Game Over öncesi) | M9/M11 — "holder dolu" uyarı animasyonu, ses |
+| `OnBoosterUsed(BoosterType)` | `GameManager.UseBooster()` | M11 — match VFX, ses efekti |
+| `OnMatchOccurred(CarColor)` | `Holder.ResolveMatches()` | M11 — match VFX, ses efekti, combo sayacı |
+| `OnHolderFull()` | `Holder` (Game Over öncesi) | M11 — "holder dolu" uyarı animasyonu, ses |
 
 ### Subscriber Sırası (Kritik)
 
