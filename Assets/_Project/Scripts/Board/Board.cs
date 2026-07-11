@@ -274,7 +274,8 @@ namespace CarMatchClone.Board
             if (cell == null || cell.Occupant != null) return;
 
             SpawnFruitAtCell(cell, fruitType);
-            _onBoardStateChangedChannel?.Raise();
+            _onBoardStateChangedChannel?.Raise();          // pathfinding önce tetiklenir
+            // PlaySpawnEffect buradan kaldırıldı — GarageSpawner kendi jump animasyonunu yönetir.
         }
 
         // UndoBooster: GarageSpawner undo — spawned meyveyi siler, hücreyi walkable yapar.
@@ -375,6 +376,13 @@ namespace CarMatchClone.Board
                     Destroy(mb.gameObject);
             }
             _obstacles.Clear();
+        }
+
+        // GarageSpawner'ın preview oluşturmak için prefabı okumasına izin verir.
+        public GameObject GetFruitPrefab(FruitType fruitType)
+        {
+            if (_prefabByFruitType == null) return null;
+            return _prefabByFruitType.TryGetValue(fruitType, out var prefab) ? prefab : null;
         }
 
         public GridCell GetCell(int x, int y) => GetCell(new Vector2Int(x, y));

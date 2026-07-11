@@ -126,6 +126,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d53ca8c29f38dc144bdc8fdf9bff2873, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.Car
+  _spawnPopDuration: 0.25
+  _spawnHopHeight: 0.12
+  _spawnHopDuration: 0.12
 --- !u!114 &6808709295011339715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,5 +142,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.CarMover
   _stepDuration: 0.2
+  _rollingRadius: 0.3
   _onFruitSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
   _onFruitReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}

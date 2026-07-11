@@ -327,7 +327,7 @@ MonoBehaviour:
   _onRetryRequestedChannel: {fileID: 11400000, guid: 1c8449fc1c03c8b4b85f7577d7c26137, type: 2}
   _debugLogging: 0
   _levels:
-  - {fileID: 11400000, guid: f5801b2a45fff4c4c90174050d649e9e, type: 2}
+  - {fileID: 11400000, guid: 0ae83593956ff1745a50f861751b6fdc, type: 2}
   - {fileID: 11400000, guid: 1cf048be830733640bd91b155e55a79f, type: 2}
   - {fileID: 11400000, guid: f5801b2a45fff4c4c90174050d649e9e, type: 2}
   - {fileID: 11400000, guid: ebb9354bd64399f40bf93e1c4da33072, type: 2}
@@ -4564,7 +4564,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1871511103}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.15140615, y: -0.6557324, z: 0.29878542, w: -0.67662287}
+  m_LocalRotation: {x: 0.5283581, y: -0.67127717, z: 0.25461337, w: 0.45320725}
   m_LocalPosition: {x: 5.16, y: 9.92, z: 4.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6970,7 +6970,7 @@ Transform:
   m_GameObject: {fileID: 4049958272645350074}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.99, y: 0, z: -11.91}
+  m_LocalPosition: {x: 1.77, y: 0, z: -11.61}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 1
   m_Children: []

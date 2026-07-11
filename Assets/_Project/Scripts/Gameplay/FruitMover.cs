@@ -7,7 +7,8 @@ namespace CarMatchClone.Gameplay
 {
     public class FruitMover : MonoBehaviour
     {
-        [SerializeField] private float _stepDuration = 0.2f;
+        [SerializeField] private float _stepDuration  = 0.2f;
+        [SerializeField] private float _rollingRadius = 0.5f;  // büyük değer = yavaş dönüş
         [SerializeField] private FruitEventChannel _onFruitSelectedChannel;
         [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
 
@@ -15,6 +16,8 @@ namespace CarMatchClone.Gameplay
         private CarMatchClone.Board.Board _board;
         private CarMatchClone.Board.PathfindingService _pathfindingService;
         private Transform _holderEntryPoint;
+        private float _meshCenterY; // BoxCollider.center.y × lossyScale.y — mesh geometrik merkezi yüksekliği
+        private Vector3 _pathPos;   // DOTween'in sürdüğü sanal yol pozisyonu (Y=0 düzlemi)
 
         private void Awake()
         {
@@ -25,6 +28,9 @@ namespace CarMatchClone.Gameplay
             if (ep == null)
                 Debug.LogWarning("[FruitMover] HolderEntryPoint sahnede bulunamadı — meyve exit noktasında duracak.");
             _holderEntryPoint = ep != null ? ep.transform : null;
+
+            var col = GetComponent<BoxCollider>();
+            _meshCenterY = col != null ? col.center.y * transform.lossyScale.y : 0f;
         }
 
         private void OnEnable()
@@ -59,10 +65,44 @@ namespace CarMatchClone.Gameplay
             if (_holderEntryPoint != null)
                 worldPath.Add(_holderEntryPoint.position);
 
+            // _pathPos: grid yolu üzerindeki hedef pozisyon (Y=0).
+            // transform.position bu'dan şu formülle türetilir:
+            //   transform.position = _pathPos + V - q*V   (V = up * _meshCenterY)
+            // => mesh_center_world = transform.position + q*V = _pathPos + V   (sabit yükseklik, zemine gömülme yok)
+            _pathPos = transform.position;
+            Vector3 prevPathPos = _pathPos;
+
             var sequence = DOTween.Sequence();
             foreach (var wp in worldPath)
-                sequence.Append(transform.DOMove(wp, _stepDuration).SetEase(Ease.Linear));
-            sequence.OnComplete(() => _onFruitReachedHolderChannel.Raise(_fruit));
+            {
+                Vector3 capturedWp = wp;
+                sequence.Append(
+                    DOTween.To(() => _pathPos, x => _pathPos = x, capturedWp, _stepDuration)
+                    .SetEase(Ease.Linear));
+            }
+
+            sequence.OnUpdate(() =>
+            {
+                Vector3 delta = _pathPos - prevPathPos;
+                if (delta.sqrMagnitude > 1e-6f)
+                {
+                    Vector3 rollAxis = Vector3.Cross(Vector3.up, delta.normalized);
+                    float   angle    = (delta.magnitude / _rollingRadius) * Mathf.Rad2Deg;
+                    transform.Rotate(rollAxis, angle, Space.World);
+                }
+                prevPathPos = _pathPos;
+
+                // Mesh merkezini her frame _pathPos + H yüksekliğinde tut.
+                Vector3 centerVec    = Vector3.up * _meshCenterY;
+                transform.position   = _pathPos + centerVec - transform.rotation * centerVec;
+            });
+
+            sequence.OnComplete(() =>
+            {
+                transform.rotation = Quaternion.identity;
+                transform.position = _pathPos;
+                _onFruitReachedHolderChannel.Raise(_fruit);
+            });
         }
     }
 }
