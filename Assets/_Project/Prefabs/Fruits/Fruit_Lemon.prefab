@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 6297419360127688196}
   - component: {fileID: 6808709295011339715}
   m_Layer: 0
-  m_Name: Car_Red
+  m_Name: Fruit_Lemon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -69,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 78b42b30ea6aba649a5e59c044bb9816, type: 2}
+  - {fileID: 2100000, guid: b15003ab51c2dd74d856b42754b75a83, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -139,5 +139,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.CarMover
   _stepDuration: 0.2
-  _onCarSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
-  _onCarReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
+  _onFruitSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onFruitReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}

@@ -14,15 +14,15 @@ namespace CarMatchClone.Editor
 
         // ── Grid state ────────────────────────────────────────────────
         private readonly CellType[]        _cellTypes        = new CellType[TOTAL];
-        private readonly CarColor[]        _cellColors       = new CarColor[TOTAL];  // CarSlot + LockedBox
+        private readonly FruitType[]       _cellColors       = new FruitType[TOTAL];  // FruitSlot + LockedBox
         private readonly FacingDirection[] _cellFacings      = new FacingDirection[TOTAL];
-        private readonly List<CarColor>[]  _cellGarageColors = new List<CarColor>[TOTAL]; // GarageSpawner
+        private readonly List<FruitType>[] _cellGarageColors = new List<FruitType>[TOTAL]; // GarageSpawner
 
         // ── Fırça state ───────────────────────────────────────────────
-        private CellType        _brushType    = CellType.Wall;
-        private CarColor        _brushColor   = CarColor.None;
-        private FacingDirection _brushFacing  = FacingDirection.Down;
-        private List<CarColor>  _brushGarageColors = new List<CarColor>();
+        private CellType        _brushType         = CellType.Wall;
+        private FruitType       _brushColor        = FruitType.None;
+        private FacingDirection _brushFacing       = FacingDirection.Down;
+        private List<FruitType> _brushGarageColors = new List<FruitType>();
 
         // ── Asset & ayarlar ───────────────────────────────────────────
         private LevelData _target;
@@ -33,7 +33,7 @@ namespace CarMatchClone.Editor
         private GUIStyle _coordLabel;
         private GUIStyle _overlayLabel;
 
-        // CarSlot + LockedBox için tek renk seçimi aktif; Garage kendi listesini kullanır
+        // FruitSlot + LockedBox için tek renk seçimi aktif; Garage kendi listesini kullanır
         private bool BrushNeedsColor =>
             _brushType == CellType.CarSlot   ||
             _brushType == CellType.LockedBox;
@@ -106,9 +106,9 @@ namespace CarMatchClone.Editor
             // --- Tip satırı 1: temel tipler ---
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Tip:", GUILayout.Width(32));
-            TypeBtn(CellType.CarSlot, "CarSlot", new Color(0.78f, 0.78f, 0.78f));
-            TypeBtn(CellType.Empty,   "Empty",   new Color(0.40f, 0.70f, 0.40f));
-            TypeBtn(CellType.Wall,    "Wall",    new Color(0.32f, 0.32f, 0.32f));
+            TypeBtn(CellType.CarSlot, "FruitSlot", new Color(0.78f, 0.78f, 0.78f));
+            TypeBtn(CellType.Empty,   "Empty",      new Color(0.40f, 0.70f, 0.40f));
+            TypeBtn(CellType.Wall,    "Wall",        new Color(0.32f, 0.32f, 0.32f));
             EditorGUILayout.EndHorizontal();
 
             // --- Tip satırı 2: engel tipleri ---
@@ -118,17 +118,17 @@ namespace CarMatchClone.Editor
             TypeBtn(CellType.GarageSpawner, "Garage",    new Color(0.50f, 0.12f, 0.70f));
             EditorGUILayout.EndHorizontal();
 
-            // --- Renk satırı (CarSlot + LockedBox için; Garage devre dışı) ---
+            // --- Renk satırı (FruitSlot + LockedBox için; Garage devre dışı) ---
             string colorLabel = _brushType == CellType.LockedBox ? "Gizli:" : "Renk:";
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(colorLabel, GUILayout.Width(44));
             GUI.enabled = BrushNeedsColor;
-            ColorBtn(CarColor.Red,    new Color(0.90f, 0.20f, 0.20f));
-            ColorBtn(CarColor.Blue,   new Color(0.20f, 0.40f, 0.90f));
-            ColorBtn(CarColor.Green,  new Color(0.20f, 0.78f, 0.30f));
-            ColorBtn(CarColor.Yellow, new Color(0.92f, 0.80f, 0.10f));
-            ColorBtn(CarColor.Purple, new Color(0.60f, 0.20f, 0.82f));
-            ColorBtn(CarColor.Orange, new Color(0.92f, 0.52f, 0.12f));
+            ColorBtn(FruitType.Tomato,     new Color(0.90f, 0.20f, 0.20f));
+            ColorBtn(FruitType.Coconut,    new Color(0.20f, 0.40f, 0.90f));
+            ColorBtn(FruitType.Watermelon, new Color(0.20f, 0.78f, 0.30f));
+            ColorBtn(FruitType.Lemon,      new Color(0.92f, 0.80f, 0.10f));
+            ColorBtn(FruitType.Grape,      new Color(0.60f, 0.20f, 0.82f));
+            ColorBtn(FruitType.Orange,     new Color(0.92f, 0.52f, 0.12f));
             GUI.enabled = true;
             EditorGUILayout.EndHorizontal();
 
@@ -162,7 +162,7 @@ namespace CarMatchClone.Editor
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("+ Renk Ekle", GUILayout.Width(90)))
             {
-                _brushGarageColors.Add(CarColor.Red);
+                _brushGarageColors.Add(FruitType.Tomato);
                 Repaint();
             }
             GUI.enabled = _brushGarageColors.Count > 0;
@@ -186,7 +186,7 @@ namespace CarMatchClone.Editor
                 {
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Label($"{i + 1}.", GUILayout.Width(22));
-                    _brushGarageColors[i] = (CarColor)EditorGUILayout.EnumPopup(
+                    _brushGarageColors[i] = (FruitType)EditorGUILayout.EnumPopup(
                         _brushGarageColors[i], GUILayout.Width(90));
                     EditorGUILayout.EndHorizontal();
                 }
@@ -208,12 +208,12 @@ namespace CarMatchClone.Editor
             {
                 _brushType = type;
                 if (type == CellType.Wall || type == CellType.Empty)
-                    _brushColor = CarColor.None;
+                    _brushColor = FruitType.None;
             }
             GUI.backgroundColor = prev;
         }
 
-        private void ColorBtn(CarColor color, Color displayCol)
+        private void ColorBtn(FruitType color, Color displayCol)
         {
             var prev = GUI.backgroundColor;
             GUI.backgroundColor = _brushColor == color ? displayCol * 1.5f : displayCol;
@@ -290,7 +290,7 @@ namespace CarMatchClone.Editor
                     EditorGUI.DrawRect(r, new Color(0.45f, 0.10f, 0.65f));
                     // İç kare: sıradaki ilk rengi gösterir
                     var firstColor = (gColors != null && gColors.Count > 0)
-                        ? gColors[0] : CarColor.None;
+                        ? gColors[0] : FruitType.None;
                     EditorGUI.DrawRect(
                         new Rect(r.x + 10, r.y + 10, r.width - 20, r.height - 20),
                         ToDisplayColor(firstColor));
@@ -363,9 +363,9 @@ namespace CarMatchClone.Editor
             for (int i = 0; i < TOTAL; i++)
             {
                 _cellTypes[i]        = CellType.Empty;
-                _cellColors[i]       = CarColor.None;
+                _cellColors[i]       = FruitType.None;
                 _cellFacings[i]      = FacingDirection.Down;
-                _cellGarageColors[i] = new List<CarColor>();
+                _cellGarageColors[i] = new List<FruitType>();
             }
             Repaint();
         }
@@ -386,8 +386,8 @@ namespace CarMatchClone.Editor
                 _cellColors[idx]  = e.color;
                 _cellFacings[idx] = e.facingDirection;
                 _cellGarageColors[idx] = e.garageColors != null
-                    ? new List<CarColor>(e.garageColors)
-                    : new List<CarColor>();
+                    ? new List<FruitType>(e.garageColors)
+                    : new List<FruitType>();
             }
         }
 
@@ -405,7 +405,7 @@ namespace CarMatchClone.Editor
                         color           = _cellColors[idx],
                         facingDirection = _cellFacings[idx],
                         garageColors    = _cellGarageColors[idx]?.ToArray()
-                                          ?? System.Array.Empty<CarColor>()
+                                          ?? System.Array.Empty<FruitType>()
                     });
                 }
             asset.cells    = cells.ToArray();
@@ -422,32 +422,32 @@ namespace CarMatchClone.Editor
                 case CellType.CarSlot:
                 case CellType.LockedBox:
                     _cellColors[idx]       = _brushColor;
-                    _cellGarageColors[idx] = new List<CarColor>();
+                    _cellGarageColors[idx] = new List<FruitType>();
                     break;
 
                 case CellType.GarageSpawner:
-                    _cellColors[idx]       = CarColor.None;
-                    _cellGarageColors[idx] = new List<CarColor>(_brushGarageColors);
+                    _cellColors[idx]       = FruitType.None;
+                    _cellGarageColors[idx] = new List<FruitType>(_brushGarageColors);
                     break;
 
                 default: // Empty, Wall
-                    _cellColors[idx]       = CarColor.None;
-                    _cellGarageColors[idx] = new List<CarColor>();
+                    _cellColors[idx]       = FruitType.None;
+                    _cellGarageColors[idx] = new List<FruitType>();
                     break;
             }
         }
 
-        private static Color ToDisplayColor(CarColor c)
+        private static Color ToDisplayColor(FruitType c)
         {
             switch (c)
             {
-                case CarColor.Red:    return new Color(0.90f, 0.22f, 0.22f);
-                case CarColor.Blue:   return new Color(0.22f, 0.42f, 0.90f);
-                case CarColor.Green:  return new Color(0.22f, 0.78f, 0.32f);
-                case CarColor.Yellow: return new Color(0.92f, 0.80f, 0.10f);
-                case CarColor.Purple: return new Color(0.62f, 0.22f, 0.82f);
-                case CarColor.Orange: return new Color(0.92f, 0.52f, 0.12f);
-                default:              return new Color(0.72f, 0.72f, 0.72f);
+                case FruitType.Tomato:     return new Color(0.90f, 0.22f, 0.22f);
+                case FruitType.Coconut:    return new Color(0.22f, 0.42f, 0.90f);
+                case FruitType.Watermelon: return new Color(0.22f, 0.78f, 0.32f);
+                case FruitType.Lemon:      return new Color(0.92f, 0.80f, 0.10f);
+                case FruitType.Grape:      return new Color(0.62f, 0.22f, 0.82f);
+                case FruitType.Orange:     return new Color(0.92f, 0.52f, 0.12f);
+                default:                   return new Color(0.72f, 0.72f, 0.72f);
             }
         }
 
