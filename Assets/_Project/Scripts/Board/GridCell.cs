@@ -8,7 +8,7 @@ namespace CarMatchClone.Board
     {
         public Vector2Int Position { get; }
         public bool IsWalkable { get; set; }
-        public Car Occupant { get; set; }
+        public Fruit Occupant { get; set; }
 
         public GridCell(Vector2Int position, bool isWalkable = true)
         {

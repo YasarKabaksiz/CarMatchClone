@@ -166,7 +166,7 @@ namespace CarMatchClone.Core
         private void HandleHolderProcessed()
         {
             if (_gameState.IsGameOver || _gameState.IsLevelComplete) return;
-            bool reserveEmpty = _superUndoBooster == null || !_superUndoBooster.HasReservedCar;
+            bool reserveEmpty = _superUndoBooster == null || !_superUndoBooster.HasReservedFruit;
             if (_board.IsBoardEmpty() && reserveEmpty)
                 _onLevelCompleteChannel.Raise();
         }

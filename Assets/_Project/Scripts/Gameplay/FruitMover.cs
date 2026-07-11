@@ -5,51 +5,51 @@ using CarMatchClone.Core.Events;
 
 namespace CarMatchClone.Gameplay
 {
-    public class CarMover : MonoBehaviour
+    public class FruitMover : MonoBehaviour
     {
         [SerializeField] private float _stepDuration = 0.2f;
-        [SerializeField] private CarEventChannel _onCarSelectedChannel;
-        [SerializeField] private CarEventChannel _onCarReachedHolderChannel;
+        [SerializeField] private FruitEventChannel _onFruitSelectedChannel;
+        [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
 
-        private Car _car;
+        private Fruit _fruit;
         private CarMatchClone.Board.Board _board;
         private CarMatchClone.Board.PathfindingService _pathfindingService;
         private Transform _holderEntryPoint;
 
         private void Awake()
         {
-            _car = GetComponent<Car>();
+            _fruit = GetComponent<Fruit>();
             _board = FindFirstObjectByType<CarMatchClone.Board.Board>();
             _pathfindingService = FindFirstObjectByType<CarMatchClone.Board.PathfindingService>();
             var ep = FindFirstObjectByType<HolderEntryPoint>();
             if (ep == null)
-                Debug.LogWarning("[CarMover] HolderEntryPoint sahnede bulunamadı — araç exit noktasında duracak.");
+                Debug.LogWarning("[FruitMover] HolderEntryPoint sahnede bulunamadı — meyve exit noktasında duracak.");
             _holderEntryPoint = ep != null ? ep.transform : null;
         }
 
         private void OnEnable()
         {
-            if (_onCarSelectedChannel == null)
+            if (_onFruitSelectedChannel == null)
             {
-                Debug.LogError($"[CarMover] OnCarSelectedChannel atanmamış — {gameObject.name} hareket etmez.");
+                Debug.LogError($"[FruitMover] OnFruitSelectedChannel atanmamış — {gameObject.name} hareket etmez.");
                 return;
             }
-            _onCarSelectedChannel.Subscribe(HandleCarSelected);
+            _onFruitSelectedChannel.Subscribe(HandleFruitSelected);
         }
 
         private void OnDisable()
         {
-            _onCarSelectedChannel?.Unsubscribe(HandleCarSelected);
+            _onFruitSelectedChannel?.Unsubscribe(HandleFruitSelected);
         }
 
-        private void HandleCarSelected(Car car)
+        private void HandleFruitSelected(Fruit fruit)
         {
-            if (car != _car) return;
+            if (fruit != _fruit) return;
 
-            var gridPath = _pathfindingService.GetPathToExit(_car.GridPosition, _board);
+            var gridPath = _pathfindingService.GetPathToExit(_fruit.GridPosition, _board);
             if (gridPath == null || gridPath.Count == 0)
             {
-                _onCarReachedHolderChannel.Raise(_car);
+                _onFruitReachedHolderChannel.Raise(_fruit);
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace CarMatchClone.Gameplay
             var sequence = DOTween.Sequence();
             foreach (var wp in worldPath)
                 sequence.Append(transform.DOMove(wp, _stepDuration).SetEase(Ease.Linear));
-            sequence.OnComplete(() => _onCarReachedHolderChannel.Raise(_car));
+            sequence.OnComplete(() => _onFruitReachedHolderChannel.Raise(_fruit));
         }
     }
 }

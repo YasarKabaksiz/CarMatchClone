@@ -89,13 +89,13 @@ namespace CarMatchClone.SpecialMechanics
 
             _triggered = false;
 
-            // Araç silinir; hücre walkable=false kalır (kutu aktifken bloklama devam eder).
-            bool removed = _board.RemoveCarAtAndBlock(_gridPos);
+            // Meyve silinir; hücre walkable=false kalır (kutu aktifken bloklama devam eder).
+            bool removed = _board.RemoveFruitAtAndBlock(_gridPos);
 
             if (_debugLogging)
             {
                 var cell = _board.GetCell(_gridPos);
-                Debug.Log($"[#{++_seq}][LockedBox] RemoveCarAtAndBlock sonuç={removed} — IsWalkable={cell?.IsWalkable}, Occupant={(cell?.Occupant != null ? cell.Occupant.name : "null")}");
+                Debug.Log($"[#{++_seq}][LockedBox] RemoveFruitAtAndBlock sonuç={removed} — IsWalkable={cell?.IsWalkable}, Occupant={(cell?.Occupant != null ? cell.Occupant.name : "null")}");
             }
 
             // SetActive(true) → OnEnable → _onCellVacatedChannel.Subscribe(OnCellVacated)

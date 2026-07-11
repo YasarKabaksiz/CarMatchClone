@@ -7,66 +7,66 @@ namespace CarMatchClone.Boosters
 {
     public class SuperUndoBooster : MonoBehaviour, IBooster
     {
-        [SerializeField] private CarEventChannel _onCarSelectedChannel;
+        [SerializeField] private FruitEventChannel _onFruitSelectedChannel;
         [SerializeField] private Holder _holder;
         [SerializeField] private Transform _reserveSlotTransform;
 
         private bool _isActive;
-        private Car _reservedCar;
+        private Fruit _reservedFruit;
 
-        public bool HasReservedCar => _reservedCar != null;
+        public bool HasReservedFruit => _reservedFruit != null;
 
         public bool Execute(CarMatchClone.Board.Board board, GameState state)
         {
             if (_isActive)
             {
-                Debug.LogWarning("[SuperUndoBooster] Zaten aktif — önce mevcut araç seçilmeli.");
+                Debug.LogWarning("[SuperUndoBooster] Zaten aktif — önce mevcut meyve seçilmeli.");
                 return false;
             }
-            if (_reservedCar != null)
+            if (_reservedFruit != null)
             {
-                Debug.LogWarning("[SuperUndoBooster] Rezerv slotta araç var — önce ReleaseReserve çağrılmalı.");
+                Debug.LogWarning("[SuperUndoBooster] Rezerv slotta meyve var — önce ReleaseReserve çağrılmalı.");
                 return false;
             }
 
             _isActive = true;
-            _holder.SetNextCarInterceptor(PlaceInReserve);
+            _holder.SetNextFruitInterceptor(PlaceInReserve);
             return true;
         }
 
-        private void PlaceInReserve(Car car)
+        private void PlaceInReserve(Fruit fruit)
         {
             _isActive = false;
-            _reservedCar = car;
+            _reservedFruit = fruit;
 
-            // Rezervdeki araç input sisteminden tamamen izole edilmeli:
+            // Rezervdeki meyve input sisteminden tamamen izole edilmeli:
             // IsReachable=false → GameInputHandler tıklamayı reddeder.
             // Collider disabled → Raycast'e hiç yakalanmaz (çift koruma).
-            car.IsReachable = false;
-            var col = car.GetComponent<Collider>();
+            fruit.IsReachable = false;
+            var col = fruit.GetComponent<Collider>();
             if (col != null) col.enabled = false;
 
             if (_reserveSlotTransform != null)
-                car.transform.position = _reserveSlotTransform.position;
+                fruit.transform.position = _reserveSlotTransform.position;
         }
 
         public void ReleaseReserve()
         {
-            if (_reservedCar == null)
+            if (_reservedFruit == null)
             {
-                Debug.LogWarning("[SuperUndoBooster] Rezerv slotta araç yok.");
+                Debug.LogWarning("[SuperUndoBooster] Rezerv slotta meyve yok.");
                 return;
             }
 
-            var car = _reservedCar;
-            _reservedCar = null;
+            var fruit = _reservedFruit;
+            _reservedFruit = null;
 
-            // Collider'ı geri aç; ForceAddCar zaten IsReachable=false yapar.
+            // Collider'ı geri aç; ForceAddFruit zaten IsReachable=false yapar.
             // Pool'a geri döndüğünde collider'ın enabled=true olması gerekir.
-            var col = car.GetComponent<Collider>();
+            var col = fruit.GetComponent<Collider>();
             if (col != null) col.enabled = true;
 
-            _holder.ForceAddCar(car);
+            _holder.ForceAddFruit(fruit);
         }
     }
 }

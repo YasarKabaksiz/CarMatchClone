@@ -11,9 +11,9 @@ namespace CarMatchClone.Data
         {
             public Vector2Int    position;
             public CellType      type;
-            public CarColor      color;           // CarSlot: araç rengi | LockedBox: gizli araç rengi
+            public FruitType     color;           // CarSlot: meyve tipi | LockedBox: gizli meyve tipi
             public FacingDirection facingDirection; // Yalnızca GarageSpawner için
-            public CarColor[]    garageColors;    // Yalnızca GarageSpawner: sıralı spawn renkleri; uzunluk = stok sayısı
+            public FruitType[]   garageColors;    // Yalnızca GarageSpawner: sıralı spawn tipleri; uzunluk = stok sayısı
         }
 
         public CellEntry[] cells;

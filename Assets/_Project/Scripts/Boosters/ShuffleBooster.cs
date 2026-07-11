@@ -7,7 +7,7 @@ namespace CarMatchClone.Boosters
     {
         public bool Execute(CarMatchClone.Board.Board board, GameState state)
         {
-            board.ShuffleCarColors();
+            board.ShuffleFruitTypes();
             return true;
         }
     }

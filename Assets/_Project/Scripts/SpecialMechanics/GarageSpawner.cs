@@ -12,10 +12,10 @@ namespace CarMatchClone.SpecialMechanics
         private CarMatchClone.Board.Board _board;
         private CellEventChannel _onCellVacatedChannel;
         private ObstacleEventChannel _onObstacleTriggeredChannel;
-        private CarColor[] _garageColors;
+        private FruitType[] _fruitTypes;
         private int _currentSpawnIndex;
 
-        public bool IsActive => _garageColors != null && _currentSpawnIndex < _garageColors.Length;
+        public bool IsActive => _fruitTypes != null && _currentSpawnIndex < _fruitTypes.Length;
 
         public void Initialize(Vector2Int gridPos, CarMatchClone.Board.Board board, CellEventChannel onCellVacatedChannel)
         {
@@ -26,9 +26,9 @@ namespace CarMatchClone.SpecialMechanics
         }
 
         // Board.SpawnGarageSpawner tarafından Initialize'dan sonra çağrılır.
-        public void Setup(CarColor[] garageColors, FacingDirection facing, ObstacleEventChannel onObstacleTriggeredChannel)
+        public void Setup(FruitType[] fruitTypes, FacingDirection facing, ObstacleEventChannel onObstacleTriggeredChannel)
         {
-            _garageColors = garageColors;
+            _fruitTypes = fruitTypes;
             _currentSpawnIndex = 0;
             _facingCell = _gridPos + facing.ToVector();
             _onObstacleTriggeredChannel = onObstacleTriggeredChannel;
@@ -48,9 +48,9 @@ namespace CarMatchClone.SpecialMechanics
 
         private void Trigger()
         {
-            var spawnColor = _garageColors[_currentSpawnIndex];
+            var fruitType = _fruitTypes[_currentSpawnIndex];
             _currentSpawnIndex++;
-            _board.SpawnFromGarage(_facingCell, spawnColor);
+            _board.SpawnFromGarage(_facingCell, fruitType);
             _onObstacleTriggeredChannel?.Raise(new ObstacleTriggerPayload
             {
                 Position = _facingCell,
@@ -61,7 +61,7 @@ namespace CarMatchClone.SpecialMechanics
         private void UndoLastSpawn()
         {
             _currentSpawnIndex--;
-            _board.RemoveCarAt(_facingCell);
+            _board.RemoveFruitAt(_facingCell);
         }
     }
 }

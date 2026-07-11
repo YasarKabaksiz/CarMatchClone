@@ -9,40 +9,40 @@ namespace CarMatchClone.Boosters
 {
     public class UndoBooster : MonoBehaviour, IBooster
     {
-        // OnBeforeCarRemoved: Board'un HandleCarSelected başında, hücre boşaltılmadan önce fırlatır.
+        // OnBeforeFruitRemoved: Board'un HandleFruitSelected başında, hücre boşaltılmadan önce fırlatır.
         // Bu sayede RecordSnapshot her zaman GarageSpawner.Trigger()'dan önce çalışır.
-        [SerializeField] private CarEventChannel _onBeforeCarRemovedChannel;
+        [SerializeField] private FruitEventChannel _onBeforeFruitRemovedChannel;
         [SerializeField] private ObstacleEventChannel _onObstacleTriggeredChannel;
         [SerializeField] private Holder _holder;
         [SerializeField] private bool _debugLogging;
 
         private bool _hasSnapshot;
         private Vector2Int _snapshotPos;
-        private CarColor _snapshotColor;
+        private FruitType _snapshotFruitType;
         private readonly List<System.Action> _pendingObstacleUndos = new List<System.Action>();
 
         private static int _seq;
 
         private void OnEnable()
         {
-            _onBeforeCarRemovedChannel?.Subscribe(RecordSnapshot);
+            _onBeforeFruitRemovedChannel?.Subscribe(RecordSnapshot);
             _onObstacleTriggeredChannel?.Subscribe(OnObstacleTriggered);
         }
 
         private void OnDisable()
         {
-            _onBeforeCarRemovedChannel?.Unsubscribe(RecordSnapshot);
+            _onBeforeFruitRemovedChannel?.Unsubscribe(RecordSnapshot);
             _onObstacleTriggeredChannel?.Unsubscribe(OnObstacleTriggered);
         }
 
-        private void RecordSnapshot(Car car)
+        private void RecordSnapshot(Fruit fruit)
         {
-            _snapshotPos = car.GridPosition;
-            _snapshotColor = car.Color;
+            _snapshotPos = fruit.GridPosition;
+            _snapshotFruitType = fruit.Color;
             _pendingObstacleUndos.Clear();
             _hasSnapshot = true;
             if (_debugLogging)
-                Debug.Log($"[#{++_seq}][UndoBooster] RecordSnapshot → pos={_snapshotPos} renk={_snapshotColor}");
+                Debug.Log($"[#{++_seq}][UndoBooster] RecordSnapshot → pos={_snapshotPos} tip={_snapshotFruitType}");
         }
 
         private void OnObstacleTriggered(ObstacleTriggerPayload payload)
@@ -56,7 +56,7 @@ namespace CarMatchClone.Boosters
         public bool Execute(CarMatchClone.Board.Board board, GameState state)
         {
             if (_debugLogging)
-                Debug.Log($"[#{++_seq}][UndoBooster] Execute → hasSnapshot={_hasSnapshot}, obstacleCount={_pendingObstacleUndos.Count}, pos={_snapshotPos}, renk={_snapshotColor}");
+                Debug.Log($"[#{++_seq}][UndoBooster] Execute → hasSnapshot={_hasSnapshot}, obstacleCount={_pendingObstacleUndos.Count}, pos={_snapshotPos}, tip={_snapshotFruitType}");
 
             if (!_hasSnapshot)
             {
@@ -70,23 +70,23 @@ namespace CarMatchClone.Boosters
                 _pendingObstacleUndos[i]?.Invoke();
             _pendingObstacleUndos.Clear();
 
-            // 2. Holder'dan son eklenen aracı çıkar.
+            // 2. Holder'dan son eklenen meyveyi çıkar.
             if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 2 — TryRemoveLastAdded");
             if (!_holder.TryRemoveLastAdded())
             {
-                Debug.LogWarning("[UndoBooster] Holder'dan araç çıkarılamadı (eşleşmiş veya boş).");
+                Debug.LogWarning("[UndoBooster] Holder'dan meyve çıkarılamadı (eşleşmiş veya boş).");
                 _hasSnapshot = false;
                 return false;
             }
             if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 2 — başarılı");
 
-            // 3. Orijinal aracı board'a geri koy.
-            if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 3 — PlaceCarBack pos={_snapshotPos} renk={_snapshotColor}");
-            bool placed = board.PlaceCarBack(_snapshotPos, _snapshotColor);
-            if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 3 — PlaceCarBack sonuç={placed}");
+            // 3. Orijinal meyveyi board'a geri koy.
+            if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 3 — PlaceFruitBack pos={_snapshotPos} tip={_snapshotFruitType}");
+            bool placed = board.PlaceFruitBack(_snapshotPos, _snapshotFruitType);
+            if (_debugLogging) Debug.Log($"[#{++_seq}][UndoBooster] Adım 3 — PlaceFruitBack sonuç={placed}");
 
             if (!placed)
-                Debug.LogWarning($"[UndoBooster] PlaceCarBack başarısız — {_snapshotPos} hücresi dolu veya mevcut değil.");
+                Debug.LogWarning($"[UndoBooster] PlaceFruitBack başarısız — {_snapshotPos} hücresi dolu veya mevcut değil.");
 
             _hasSnapshot = false;
             return placed;

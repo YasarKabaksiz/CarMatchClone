@@ -10,16 +10,16 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private int _maxSlots = 7;
         [SerializeField] private Transform[] _slotTransforms;
         [SerializeField] private Transform _entryPoint;
-        [SerializeField] private CarEventChannel _onCarReachedHolderChannel;
+        [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
         [SerializeField] private ColorEventChannel _onMatchOccurredChannel;
         [SerializeField] private VoidEventChannel _onHolderFullChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
         [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
 
-        private Car[] _slots;
-        private Car _lastAddedCar;
-        private System.Action<Car> _nextCarInterceptor;
+        private Fruit[] _slots;
+        private Fruit _lastAddedFruit;
+        private System.Action<Fruit> _nextFruitInterceptor;
 
         public bool IsFull
         {
@@ -33,33 +33,33 @@ namespace CarMatchClone.Gameplay
 
         private void Awake()
         {
-            _slots = new Car[_maxSlots];
+            _slots = new Fruit[_maxSlots];
             if (_slotTransforms.Length != _maxSlots)
                 Debug.LogError($"[Holder] SlotTransforms sayısı ({_slotTransforms.Length}) maxSlots ({_maxSlots}) ile eşleşmiyor.");
         }
 
         private void OnEnable()
         {
-            _onCarReachedHolderChannel.Subscribe(HandleCarReachedHolder);
+            _onFruitReachedHolderChannel.Subscribe(HandleFruitReachedHolder);
         }
 
         private void OnDisable()
         {
-            _onCarReachedHolderChannel.Unsubscribe(HandleCarReachedHolder);
+            _onFruitReachedHolderChannel.Unsubscribe(HandleFruitReachedHolder);
         }
 
-        private void HandleCarReachedHolder(Car car)
+        private void HandleFruitReachedHolder(Fruit fruit)
         {
-            // SuperUndoBooster bir sonraki aracı yakalar; normal akış atlanır.
-            if (_nextCarInterceptor != null)
+            // SuperUndoBooster bir sonraki meyveyi yakalar; normal akış atlanır.
+            if (_nextFruitInterceptor != null)
             {
-                var interceptor = _nextCarInterceptor;
-                _nextCarInterceptor = null;
-                interceptor(car);
+                var interceptor = _nextFruitInterceptor;
+                _nextFruitInterceptor = null;
+                interceptor(fruit);
                 return;
             }
 
-            car.IsReachable = false;
+            fruit.IsReachable = false;
 
             if (IsFull)
             {
@@ -68,8 +68,8 @@ namespace CarMatchClone.Gameplay
                 return;
             }
 
-            InsertIntoSlot(car);
-            SnapAllCars();
+            InsertIntoSlot(fruit);
+            SnapAllFruits();
             ResolveMatches();
 
             if (IsFull)
@@ -82,21 +82,21 @@ namespace CarMatchClone.Gameplay
             _onHolderProcessedChannel?.Raise();
         }
 
-        private void InsertIntoSlot(Car car)
+        private void InsertIntoSlot(Fruit fruit)
         {
             int insertAt = -1;
 
-            // Find last slot containing same-color car; insert after it.
+            // Find last slot containing same-color fruit; insert after it.
             for (int i = _maxSlots - 1; i >= 0; i--)
             {
-                if (_slots[i] != null && _slots[i].Color == car.Color)
+                if (_slots[i] != null && _slots[i].Color == fruit.Color)
                 {
                     insertAt = i + 1;
                     break;
                 }
             }
 
-            // No same-color car found; use first empty slot.
+            // No same-color fruit found; use first empty slot.
             if (insertAt < 0)
             {
                 for (int i = 0; i < _maxSlots; i++)
@@ -119,8 +119,8 @@ namespace CarMatchClone.Gameplay
             for (int i = firstNull; i > insertAt; i--)
                 _slots[i] = _slots[i - 1];
 
-            _slots[insertAt] = car;
-            _lastAddedCar = car;
+            _slots[insertAt] = fruit;
+            _lastAddedFruit = fruit;
         }
 
         private void ResolveMatches()
@@ -128,15 +128,15 @@ namespace CarMatchClone.Gameplay
             int matchStart;
             while ((matchStart = MatchChecker.FindMatch(_slots)) >= 0)
             {
-                CarColor color = _slots[matchStart].Color;
+                FruitType fruitType = _slots[matchStart].Color;
                 for (int i = matchStart; i < matchStart + 3; i++)
                 {
                     _poolManager.Release(_slots[i].SourcePrefab, _slots[i].gameObject);
                     _slots[i] = null;
                 }
                 CompactSlots();
-                SnapAllCars();
-                _onMatchOccurredChannel.Raise(color);
+                SnapAllFruits();
+                _onMatchOccurredChannel.Raise(fruitType);
             }
         }
 
@@ -152,7 +152,7 @@ namespace CarMatchClone.Gameplay
                 _slots[i] = null;
         }
 
-        private void SnapAllCars()
+        private void SnapAllFruits()
         {
             for (int i = 0; i < _maxSlots; i++)
             {
@@ -161,50 +161,50 @@ namespace CarMatchClone.Gameplay
             }
         }
 
-        // UndoBooster: en son eklenen aracı holder'dan çıkarır ve pool'a bırakır.
+        // UndoBooster: en son eklenen meyveyi holder'dan çıkarır ve pool'a bırakır.
         public bool TryRemoveLastAdded()
         {
-            if (_lastAddedCar == null) return false;
+            if (_lastAddedFruit == null) return false;
 
             for (int i = 0; i < _maxSlots; i++)
             {
-                if (_slots[i] == _lastAddedCar)
+                if (_slots[i] == _lastAddedFruit)
                 {
-                    _poolManager.Release(_lastAddedCar.SourcePrefab, _lastAddedCar.gameObject);
+                    _poolManager.Release(_lastAddedFruit.SourcePrefab, _lastAddedFruit.gameObject);
                     _slots[i] = null;
-                    _lastAddedCar = null;
+                    _lastAddedFruit = null;
                     CompactSlots();
-                    SnapAllCars();
+                    SnapAllFruits();
                     return true;
                 }
             }
 
-            _lastAddedCar = null;
+            _lastAddedFruit = null;
             return false;
         }
 
-        // SuperUndoBooster: bir sonraki holder'a gelen aracı yakalar; tek seferlik.
-        public void SetNextCarInterceptor(System.Action<Car> interceptor)
+        // SuperUndoBooster: bir sonraki holder'a gelen meyveyi yakalar; tek seferlik.
+        public void SetNextFruitInterceptor(System.Action<Fruit> interceptor)
         {
-            _nextCarInterceptor = interceptor;
+            _nextFruitInterceptor = interceptor;
         }
 
-        // MagnetBooster: holder'daki dolu slotların renklerini döndürür.
-        public CarMatchClone.Data.CarColor[] GetOccupiedColors()
+        // MagnetBooster: holder'daki dolu slotların tiplerini döndürür.
+        public FruitType[] GetOccupiedColors()
         {
-            var result = new System.Collections.Generic.List<CarMatchClone.Data.CarColor>();
+            var result = new System.Collections.Generic.List<FruitType>();
             for (int i = 0; i < _maxSlots; i++)
                 if (_slots[i] != null) result.Add(_slots[i].Color);
             return result.ToArray();
         }
 
-        // SuperUndoBooster: rezerv slottan geri gelen aracı normal akışla holder'a ekler.
-        public void ForceAddCar(Car car)
+        // SuperUndoBooster: rezerv slottan geri gelen meyveyi normal akışla holder'a ekler.
+        public void ForceAddFruit(Fruit fruit)
         {
             if (IsFull) return;
-            car.IsReachable = false;
-            InsertIntoSlot(car);
-            SnapAllCars();
+            fruit.IsReachable = false;
+            InsertIntoSlot(fruit);
+            SnapAllFruits();
             ResolveMatches();
             if (IsFull)
             {
@@ -215,7 +215,7 @@ namespace CarMatchClone.Gameplay
             _onHolderProcessedChannel?.Raise();
         }
 
-        // Retry/Level Complete: tüm slotları boşaltır, araçları pool'a iade eder.
+        // Retry/Level Complete: tüm slotları boşaltır, meyveleri pool'a iade eder.
         public void ClearAllSlots()
         {
             for (int i = 0; i < _maxSlots; i++)
@@ -226,8 +226,8 @@ namespace CarMatchClone.Gameplay
                     _slots[i] = null;
                 }
             }
-            _lastAddedCar = null;
-            _nextCarInterceptor = null;
+            _lastAddedFruit = null;
+            _nextFruitInterceptor = null;
         }
 
         public Bounds GetBounds()

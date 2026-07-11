@@ -12,20 +12,20 @@ namespace CarMatchClone.Board
     public class Board : MonoBehaviour
     {
         [Serializable]
-        private struct CarPrefabEntry
+        private struct FruitPrefabEntry
         {
-            public CarColor color;
+            public FruitType fruitType;
             public GameObject prefab;
         }
 
         [SerializeField] private LevelData _levelData;
-        [SerializeField] private CarPrefabEntry[] _carPrefabs;
+        [SerializeField] private FruitPrefabEntry[] _fruitPrefabs;
         [SerializeField] private ObjectPoolManager _poolManager;
-        [SerializeField] private CarEventChannel _onCarSelectedChannel;
+        [SerializeField] private FruitEventChannel _onFruitSelectedChannel;
         [SerializeField] private CellEventChannel _onCellVacatedChannel;
         [SerializeField] private VoidEventChannel _onBoardStateChangedChannel;
 
-        [SerializeField] private CarEventChannel _onBeforeCarRemovedChannel;
+        [SerializeField] private FruitEventChannel _onBeforeFruitRemovedChannel;
 
         [SerializeField] private GameObject _wallPrefab;
         [SerializeField] private GameObject _lockedBoxPrefab;
@@ -33,7 +33,7 @@ namespace CarMatchClone.Board
         [SerializeField] private CarMatchClone.Core.Events.ObstacleEventChannel _onObstacleTriggeredChannel;
 
         private Dictionary<Vector2Int, GridCell> _cells;
-        private Dictionary<CarColor, GameObject> _prefabByColor;
+        private Dictionary<FruitType, GameObject> _prefabByFruitType;
         private List<GameObject> _wallObjects = new List<GameObject>();
         private List<ILaneObstacle> _obstacles = new List<ILaneObstacle>();
         private Vector3 _centerOffset;
@@ -62,25 +62,25 @@ namespace CarMatchClone.Board
 
         private void OnEnable()
         {
-            if (_onCarSelectedChannel == null)
+            if (_onFruitSelectedChannel == null)
             {
-                Debug.LogWarning("[Board] OnCarSelectedChannel atanmamış — araç seçimi çalışmaz.");
+                Debug.LogWarning("[Board] OnFruitSelectedChannel atanmamış — meyve seçimi çalışmaz.");
                 return;
             }
-            _onCarSelectedChannel.Subscribe(HandleCarSelected);
+            _onFruitSelectedChannel.Subscribe(HandleFruitSelected);
         }
 
         private void OnDisable()
         {
-            _onCarSelectedChannel?.Unsubscribe(HandleCarSelected);
+            _onFruitSelectedChannel?.Unsubscribe(HandleFruitSelected);
         }
 
-        private void HandleCarSelected(Car car)
+        private void HandleFruitSelected(Fruit fruit)
         {
             // UndoBooster'ın snapshot'ı alması için hücre boşaltılmadan önce event fırlatılır.
-            _onBeforeCarRemovedChannel?.Raise(car);
+            _onBeforeFruitRemovedChannel?.Raise(fruit);
 
-            var cell = GetCell(car.GridPosition);
+            var cell = GetCell(fruit.GridPosition);
             if (cell == null) return;
 
             cell.Occupant = null;
@@ -98,7 +98,7 @@ namespace CarMatchClone.Board
 
         public void RebuildGrid(LevelData levelData)
         {
-            ReleaseAllCars();
+            ReleaseAllFruits();
             DestroyWalls();
             DestroyObstacles();
             _levelData = levelData;
@@ -122,34 +122,34 @@ namespace CarMatchClone.Board
 
         private void BuildPrefabLookup()
         {
-            _prefabByColor = new Dictionary<CarColor, GameObject>();
-            foreach (var entry in _carPrefabs)
-                _prefabByColor[entry.color] = entry.prefab;
+            _prefabByFruitType = new Dictionary<FruitType, GameObject>();
+            foreach (var entry in _fruitPrefabs)
+                _prefabByFruitType[entry.fruitType] = entry.prefab;
         }
 
         private void WarmUpPool()
         {
-            var countByColor = new Dictionary<CarColor, int>();
+            var countByType = new Dictionary<FruitType, int>();
             foreach (var entry in _levelData.cells)
             {
                 if (entry.type == CellType.CarSlot)
                 {
-                    if (!countByColor.ContainsKey(entry.color)) countByColor[entry.color] = 0;
-                    countByColor[entry.color]++;
+                    if (!countByType.ContainsKey(entry.color)) countByType[entry.color] = 0;
+                    countByType[entry.color]++;
                 }
                 else if (entry.type == CellType.GarageSpawner && entry.garageColors != null)
                 {
                     foreach (var c in entry.garageColors)
                     {
-                        if (!countByColor.ContainsKey(c)) countByColor[c] = 0;
-                        countByColor[c]++;
+                        if (!countByType.ContainsKey(c)) countByType[c] = 0;
+                        countByType[c]++;
                     }
                 }
             }
 
-            foreach (var entry in _carPrefabs)
+            foreach (var entry in _fruitPrefabs)
             {
-                if (countByColor.TryGetValue(entry.color, out int count))
+                if (countByType.TryGetValue(entry.fruitType, out int count))
                     _poolManager.WarmUp(entry.prefab, count);
             }
         }
@@ -171,7 +171,7 @@ namespace CarMatchClone.Board
                         SpawnWall(entry.position);
                         break;
                     case CellType.CarSlot:
-                        SpawnCarAtCell(cell, entry.color);
+                        SpawnFruitAtCell(cell, entry.color);
                         break;
                     case CellType.LockedBox:
                         SpawnLockedBox(entry);
@@ -219,67 +219,67 @@ namespace CarMatchClone.Board
             var gs = obj.GetComponent<GarageSpawner>();
             if (gs == null) { Debug.LogError("[Board] GarageSpawner prefab üzerinde GarageSpawner component yok."); return; }
             gs.Initialize(entry.position, this, _onCellVacatedChannel);
-            gs.Setup(entry.garageColors ?? System.Array.Empty<CarColor>(), entry.facingDirection, _onObstacleTriggeredChannel);
+            gs.Setup(entry.garageColors ?? System.Array.Empty<FruitType>(), entry.facingDirection, _onObstacleTriggeredChannel);
             _obstacles.Add(gs);
         }
 
-        private void SpawnCarAtCell(GridCell cell, CarColor color)
+        private void SpawnFruitAtCell(GridCell cell, FruitType fruitType)
         {
-            if (!_prefabByColor.TryGetValue(color, out var prefab))
+            if (!_prefabByFruitType.TryGetValue(fruitType, out var prefab))
             {
-                Debug.LogError($"[Board] {color} rengi için prefab atanmamış.");
+                Debug.LogError($"[Board] {fruitType} tipi için prefab atanmamış.");
                 return;
             }
 
-            GameObject carObj = _poolManager.Get(prefab);
-            carObj.transform.SetPositionAndRotation(GridToWorld(cell.Position), Quaternion.identity);
-            carObj.transform.SetParent(transform);
-            carObj.SetActive(true);
-            carObj.name = $"Car_{cell.Position.x}_{cell.Position.y}";
+            GameObject fruitObj = _poolManager.Get(prefab);
+            fruitObj.transform.SetPositionAndRotation(GridToWorld(cell.Position), Quaternion.identity);
+            fruitObj.transform.SetParent(transform);
+            fruitObj.SetActive(true);
+            fruitObj.name = $"Fruit_{cell.Position.x}_{cell.Position.y}";
 
-            var car = carObj.GetComponent<Car>();
-            if (car == null)
-                car = carObj.AddComponent<Car>();
+            var fruit = fruitObj.GetComponent<Fruit>();
+            if (fruit == null)
+                fruit = fruitObj.AddComponent<Fruit>();
 
-            car.GridPosition = cell.Position;
-            car.Color = color;
-            car.SourcePrefab = prefab;
-            cell.Occupant = car;
+            fruit.GridPosition = cell.Position;
+            fruit.Color = fruitType;
+            fruit.SourcePrefab = prefab;
+            cell.Occupant = fruit;
         }
 
-        // LockedBox tarafından tetiklenir; LevelData'dan gizli araç rengini okur.
+        // LockedBox tarafından tetiklenir; LevelData'dan gizli meyve tipini okur.
         public void RevealLockedBox(Vector2Int pos)
         {
             var cell = GetCell(pos);
             if (cell == null) return;
 
-            CarColor hiddenColor = default;
+            FruitType hiddenFruitType = default;
             foreach (var entry in _levelData.cells)
             {
                 if (entry.position == pos && entry.type == CellType.LockedBox)
                 {
-                    hiddenColor = entry.color;
+                    hiddenFruitType = entry.color;
                     break;
                 }
             }
 
-            SpawnCarAtCell(cell, hiddenColor);
+            SpawnFruitAtCell(cell, hiddenFruitType);
             _onBoardStateChangedChannel?.Raise();
         }
 
-        // GarageSpawner tarafından tetiklenir; facingCell'e araç spawn eder.
-        public void SpawnFromGarage(Vector2Int pos, CarColor color)
+        // GarageSpawner tarafından tetiklenir; facingCell'e meyve spawn eder.
+        public void SpawnFromGarage(Vector2Int pos, FruitType fruitType)
         {
             var cell = GetCell(pos);
             if (cell == null || cell.Occupant != null) return;
 
-            SpawnCarAtCell(cell, color);
+            SpawnFruitAtCell(cell, fruitType);
             _onBoardStateChangedChannel?.Raise();
         }
 
-        // UndoBooster: GarageSpawner undo — spawned aracı siler, hücreyi walkable yapar.
-        // OnBoardStateChanged FIRALATMAZ — akış sonunda PlaceCarBack zaten tetikler.
-        public bool RemoveCarAt(Vector2Int pos)
+        // UndoBooster: GarageSpawner undo — spawned meyveyi siler, hücreyi walkable yapar.
+        // OnBoardStateChanged FIRALATMAZ — akış sonunda PlaceFruitBack zaten tetikler.
+        public bool RemoveFruitAt(Vector2Int pos)
         {
             var cell = GetCell(pos);
             if (cell == null || cell.Occupant == null) return false;
@@ -289,9 +289,9 @@ namespace CarMatchClone.Board
             return true;
         }
 
-        // UndoBooster: LockedBox undo — revealed aracı siler, hücre BLOKE kalır.
+        // UndoBooster: LockedBox undo — revealed meyveyi siler, hücre BLOKE kalır.
         // LockedBox hücresi kutu aktifken hiçbir zaman walkable olmamalı.
-        public bool RemoveCarAtAndBlock(Vector2Int pos)
+        public bool RemoveFruitAtAndBlock(Vector2Int pos)
         {
             var cell = GetCell(pos);
             if (cell == null || cell.Occupant == null) return false;
@@ -301,30 +301,30 @@ namespace CarMatchClone.Board
             return true;
         }
 
-        // UndoBooster: son hamlede boşalan hücreye aracı geri koyar.
-        public bool PlaceCarBack(Vector2Int pos, CarColor color)
+        // UndoBooster: son hamlede boşalan hücreye meyveyi geri koyar.
+        public bool PlaceFruitBack(Vector2Int pos, FruitType fruitType)
         {
             var cell = GetCell(pos);
             if (cell == null || cell.Occupant != null) return false;
 
             cell.IsWalkable = false;
-            SpawnCarAtCell(cell, color);
+            SpawnFruitAtCell(cell, fruitType);
             _onBoardStateChangedChannel?.Raise();
             return true;
         }
 
-        // ShuffleBooster: board'daki mevcut araçların renklerini Fisher-Yates ile karıştırır.
-        public void ShuffleCarColors()
+        // ShuffleBooster: board'daki mevcut meyvelerin tiplerini Fisher-Yates ile karıştırır.
+        public void ShuffleFruitTypes()
         {
             var occupiedCells = new List<GridCell>();
-            var colors = new List<CarColor>();
+            var fruitTypes = new List<FruitType>();
 
             foreach (var cell in _cells.Values)
             {
                 if (cell.Occupant != null)
                 {
                     occupiedCells.Add(cell);
-                    colors.Add(cell.Occupant.Color);
+                    fruitTypes.Add(cell.Occupant.Color);
                 }
             }
 
@@ -337,19 +337,19 @@ namespace CarMatchClone.Board
             }
 
             var rng = new System.Random();
-            for (int i = colors.Count - 1; i > 0; i--)
+            for (int i = fruitTypes.Count - 1; i > 0; i--)
             {
                 int j = rng.Next(i + 1);
-                var tmp = colors[i]; colors[i] = colors[j]; colors[j] = tmp;
+                var tmp = fruitTypes[i]; fruitTypes[i] = fruitTypes[j]; fruitTypes[j] = tmp;
             }
 
             for (int i = 0; i < occupiedCells.Count; i++)
-                SpawnCarAtCell(occupiedCells[i], colors[i]);
+                SpawnFruitAtCell(occupiedCells[i], fruitTypes[i]);
 
             _onBoardStateChangedChannel?.Raise();
         }
 
-        private void ReleaseAllCars()
+        private void ReleaseAllFruits()
         {
             if (_cells == null) return;
             foreach (var cell in _cells.Values)

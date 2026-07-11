@@ -3,7 +3,7 @@ namespace CarMatchClone.Gameplay
     public static class MatchChecker
     {
         // Returns start index of the first 3-in-a-row same-color group, or -1 if none.
-        public static int FindMatch(Car[] slots)
+        public static int FindMatch(Fruit[] slots)
         {
             for (int i = 0; i <= slots.Length - 3; i++)
             {
