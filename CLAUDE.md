@@ -7,7 +7,9 @@ Bu dosya, Claude Code'un her session başında otomatik okuduğu konvansiyon dos
 
 ## 1. Proje Bağlamı
 
-Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı collector/matching türü). Detaylı mimari için mutlaka `ARCHITECTURE.md` dosyasını oku ve ona uy. Her görev öncesi ilgili bölümü referans al.
+Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı meyve/sebze eşleştirme — collector/matching türü). Tema: Kenney Food Kit meyve/sebze modelleri (domates, limon, üzüm, karpuz, portakal, hindistan cevizi). Proje kodu adı `CarMatchClone`'dur ancak tema araçtan meyve/sebzeye çevrilmiştir; namespace ve proje adı değişmemektedir.
+
+Detaylı mimari için mutlaka `ARCHITECTURE.md` dosyasını oku ve ona uy. Her görev öncesi ilgili bölümü referans al.
 
 **Unity sürümü:** [LTS sürüm buraya yazılacak, proje kurulunca]
 **Render Pipeline:** URP (3D)
@@ -18,7 +20,7 @@ Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı collector/matching türü). De
 ## 2. Kesin Kurallar (Asla Yapma)
 
 - **Singleton pattern kullanma** (GameManager hariç — o da sadece sahne yaşam döngüsü için, iş mantığı içermez). Sistemler arası referans için event bus (`GameEvents`) kullan.
-- **Hardcoded değer bırakma.** Renk sayısı, holder slot sayısı, grid boyutu gibi değerler `LevelData` veya `GameConfig` ScriptableObject'lerinden gelmeli.
+- **Hardcoded değer bırakma.** Tür sayısı, holder slot sayısı, grid boyutu gibi değerler `LevelData` veya `GameConfig` ScriptableObject'lerinden gelmeli.
 - **`Update()` içinde ağır hesaplama yapma** (özellikle pathfinding). Pathfinding sadece board state değiştiğinde (event tetiklenince) çalışmalı, her frame değil.
 - **Bir sistemin başka bir sistemin private/internal detayına doğrudan erişmesi yasak.** Örn. UI kodu, Board'un GridCell dizisine doğrudan erişmemeli — public API veya event üzerinden veri almalı.
 - **Yeni bir engel/mekanik eklerken mevcut `ILaneObstacle` interface'ini bypass etme.** Yeni class yaz, mevcut LockedBox/GarageSpawner kodunu değiştirme.
@@ -27,9 +29,9 @@ Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı collector/matching türü). De
 ## 3. Kesin Kurallar (Her Zaman Yap)
 
 - Her yeni sistem için **arayüz/interface öncelikli** tasarım (ör. `IBooster`, `ILaneObstacle`) — somut sınıfı değil, interface'i referans al.
-- **ScriptableObject tabanlı veri yönetimi** her yerde: LevelData, GameConfig, CarColorPalette vb.
+- **ScriptableObject tabanlı veri yönetimi** her yerde: LevelData, GameConfig, FruitTypePalette vb.
 - Yeni bir görev bitince **kısa bir özet ver**: hangi dosyalar değişti, hangi event'ler eklendi/kullanıldı, test edilmesi gereken senaryo ne.
-- **Object pooling** kullan: Car prefabları, patlama/VFX objeleri için (mobilde GC baskısı kritik).
+- **Object pooling** kullan: Fruit prefabları, patlama/VFX objeleri için (mobilde GC baskısı kritik).
 - Yeni Input System kullan (eski `Input.GetMouseButtonDown` değil).
 
 ---
@@ -69,7 +71,7 @@ Bu bir Unity 3D mobil puzzle oyunu (grid tabanlı collector/matching türü). De
 
 ## 7. Test Beklentisi
 
-- Her yeni sistem için en azından manuel test senaryosu tarif edilmeli ("Play moduna gir, X level'ı yükle, Y arabaya tıkla, Z olmalı").
+- Her yeni sistem için en azından manuel test senaryosu tarif edilmeli ("Play moduna gir, X level'ı yükle, Y meyveye tıkla, Z olmalı").
 - Pathfinding gibi kritik sistemlerde, en az 3 farklı board şekliyle (düz, L, U şekilli) test senaryosu önerilmeli.
 - Kırılgan/riskli bir değişiklik yapılıyorsa (ör. mevcut Board API'sinde imza değişikliği), bunu açıkça belirt.
 
