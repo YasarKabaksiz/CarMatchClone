@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using CarMatchClone.Core.Events;
 
 namespace CarMatchClone.Core
@@ -6,6 +7,7 @@ namespace CarMatchClone.Core
     public class SceneLoader : MonoBehaviour
     {
         [SerializeField] private VoidEventChannel _onMainMenuRequestedChannel;
+        [SerializeField] private string _mainMenuSceneName = "MainMenu";
 
         private void OnEnable()
         {
@@ -19,9 +21,7 @@ namespace CarMatchClone.Core
 
         private void HandleMainMenuRequested()
         {
-            // MainMenu sahnesi M9'un sonraki adımında kurulacak — şimdilik no-op.
-            // TODO M9: SceneManager.LoadSceneAsync(_mainMenuSceneName)
-            Debug.Log("[SceneLoader] OnMainMenuRequested alındı — MainMenu sahnesi henüz kurulmadı.");
+            SceneManager.LoadSceneAsync(_mainMenuSceneName);
         }
     }
 }
