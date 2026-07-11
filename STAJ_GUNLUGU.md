@@ -6,6 +6,77 @@ Bu dosya, staj defteri hazırlarken referans alınmak üzere günlük çalışma
 
 ---
 
+## [TARİH GİRİLECEK] — Gün 5
+
+### Yapılan İşler
+
+Bir önceki günün son commit'i olan `feat(save): M8 - JSON tabanlı save/load sistemi...`'dan itibaren devam edildi.
+
+**1. Coin Sistemi**
+- Level tamamlandığında sabit 20 coin ödülü verilmesi sağlandı
+- `OnCoinRewardEarned` event channel'ı eklendi: Level Complete popup'ında yalnızca o turda kazanılan coin deltası (`+20`) gösteriliyor, HUD'da ise `SaveManager`'dan gelen toplam bakiye gösteriliyor
+- `GameState.Coins` alanı zaten M8'de placeholder olarak eklenmişti; bu milestone'da dolduruldu ve save/load döngüsüne dahil edildi (uygulama kapatılsa bile coin bakiyesi korunuyor)
+
+**2. Milestone 9 — UI/UX Tamamlanması**
+
+*Level İçi HUD:*
+- Booster butonları (Undo, Shuffle, SuperUndo, Magnet) ve coin göstergesi HUD'a eklendi
+- HUD güncellemeleri tamamen event tabanlı: `OnBoosterRequested`, `OnBoosterCountChanged`, `OnCoinsChanged` channel'larına subscribe ediliyor; HUD hiçbir sistemi doğrudan tanımıyor
+
+*Level Complete / Game Over Popup'ları:*
+- Level Complete popup'ı: kazanılan coin deltasını gösterir, "Continue" butonu `OnLevelContinueRequested` event'ini fırlatır
+- Game Over popup'ı: "Retry" butonu `OnRetryRequested` event'ini fırlatır
+- Event tabanlı akış bölmesi sayesinde popup'lar oyun mantığını doğrudan çağırmıyor — `GameManager` uygun event'i dinleyip tepki veriyor; UI ve mantık arasında sıfır doğrudan bağımlılık
+- Race condition düzeltmesi: Level Complete kararı `OnHolderProcessed` event'iyle (animasyon tamamlandıktan sonra) tetikleniyor, araç hareket ederken erken popup açılması sorunu giderildi
+- `ResetLevelState` artık Holder'ı da temizliyor (slot'lar, son eklenen meyve referansı, interceptor)
+
+*Ana Menü — İki Aşamalı Geliştirme:*
+- İlk aşama: level haritası (grid, kilit/açık durumu), `LevelTransitionData` ScriptableObject ile sahneler arası veri taşıma, `SceneLoader` çift yönlü çalışır hale getirildi
+- İkinci aşama (sadelleştirme): gerçek oyun referansı incelenince harita UI'sının erken aşama için fazla karmaşık olduğu görüldü; "Level X — Play" tek butonlu sade menüye dönüştürüldü, `LevelTransitionData` kaldırıldı, `SceneLoader` mantığı doğrudan `GameManager`'a taşındı
+- Bu karar "önce çalışır, sonra güzel" prensibini uygulamak için bilinçli olarak alındı
+
+*Kenney UI Pack Entegrasyonu:*
+- 9-slice butonlar ve TMP fontlarıyla ekranlar yeniden tasarlandı
+- Renk-anlam sistemi benimsendi: **mavi** = ana aksiyon, **kırmızı** = acil/tehlike, **gri** = nötr/iptal, **sarı** = ödül/coin, **yeşil** = oyna/devam
+
+**3. Büyük Konsept Değişikliği — Car → Fruit Reskin ("Taze Pazar" Teması)**
+
+*Karar ve Motivasyon:*
+- Araç temasının ücretsiz 3D asset bulma sürecinde kısıtlayıcı olduğu görüldü; Kenney'nin ücretsiz Food Kit ve Pirate Kit ile meyve/sebze temasına geçiş kararı alındı
+- Tema değişikliği; staj projesini oynanabilir bir prototipin ötesine taşıyıp görsel kimliğini güçlendirdi
+
+*GUID Koruma Stratejisi ile Risksiz Refactor:*
+- Unity'de dosya yeniden adlandırma hatalı yapılırsa prefab/scene referansları kopar; bu riski önlemek için tüm `.cs` dosyaları Unity Editor'ın "Rename" özelliğiyle yeniden adlandırıldı (GUID korundu), ardından `git mv` ile git geçmişi de senkronize edildi
+- `Car` → `Fruit`, `CarMover` → `FruitMover`, `CarColor` → `FruitType` (enum değerleri: `Red→Tomato`, `Blue→Coconut`, `Green→Watermelon`, `Yellow→Lemon`, `Purple→Grape`, `Orange→Orange`)
+- Tüm event channel'lar, prefablar ve level asset'leri eş zamanlı güncellendi; `ARCHITECTURE.md` ve `CLAUDE.md` dokümantasyonu yenilendi
+- Oyun mantığı, pathfinding, save sistemi — **hiçbiri değişmedi**; event-driven mimarinin isimden bağımsız çalışması burada kanıtlandı
+
+*Kenney Food Kit 3D Model Entegrasyonu:*
+- 6 meyve türü seçildi ve prefab'lara yerleştirildi: Tomato (scale 6), Coconut (scale 7), Watermelon (scale 2.5, 8 parçalı slice), Lemon (scale 5), Grape (scale 4), Orange (scale 6)
+- Wall → Crate, LockedBox → Chest, GarageSpawner → Bowl tematik karşılıkları oluşturuldu
+- Holder slot tepsileri (cutting board stili), çevre/zemin düzenlemesi yapıldı
+
+*PropScatterTool — Özel Editor Aracı:*
+- `Window → CarMatchClone → Prop Scatter Tool`: seçilen prefabı belirtilen XZ alanına rastgele sayı, konum, rotasyon ve ölçek varyasyonuyla dağıtır
+- `PrefabUtility.InstantiatePrefab` ile prefab bağlantısı korunuyor; tüm scatter işlemi tek `Ctrl+Z` ile geri alınabilir (`Undo.CollapseUndoOperations`)
+
+*Animasyon Sistemi — Üç Katmanlı Geliştirme:*
+- **Pivot-doğru yuvarlanma**: `transform.Rotate(axis, angle)` mesh'i taban noktasında (Y=0) döndürdüğü için meyve zemine gömülüyor ve büyüyüp küçülüyordu. BoxCollider center'dan hesaplanan `_meshCenterY` değeriyle `DOTween.To()` + pozisyon telafisi formülü (`transform.position = pathPos + V - q*V`) sayesinde mesh merkezi hareket boyunca sabit yükseklikte tutuldu; zemine girme sorunu tamamen giderildi
+- **Holder varışında rotasyon düzeltme**: Hareket sırasında biriken rastgele rotasyonu temizlemek için `OnComplete` callback'inde `transform.rotation = Quaternion.identity` sıfırlaması eklendi
+- **GarageSpawner Preview Sistemi**: Bowl üzerinde sıradaki meyvenin küçük (%65 ölçek) görsel kopyası (MeshFilter + MeshRenderer kopyalama, Fruit/Collider/FruitMover yok) bekliyor. Tetiklenince: oyun mantığı hemen çalışır (grid state güncellenir, pathfinding yeniden hesaplanır), gerçek meyve geçici olarak gizlenir, preview parabolik ark çizerek facing hücreye zıplar, iniş sonrası gerçek meyve mini-pop ile görünür hale gelir. Undo tetiklenince preview bowl'a geri döner.
+
+### Kullanılan Araçlar/Teknikler
+- Unity 3D (URP), C#, DOTween (Sequence, DOPath, DOMoveX/Y/Z, DOScale), ScriptableObject Event Channel Pattern, A* Pathfinding, Object Pooling, JSON Serialization, Git/GitHub (GUID-safe rename), Claude Code (AI-assisted development), Unity Editor Scripting (EditorWindow, PrefabUtility, Undo API), Kenney Food Kit / Kenney UI Pack (CC0)
+
+### Öğrenilenler / Notlar
+- **GUID disiplini büyük ölçekli refactor'larda kritik**: Unity'de `.cs` dosyasını dosya sistemi üzerinden yeniden adlandırmak GUID'yi değiştirmez ama git bu değişikliği "sil + yeni dosya" olarak görür. Doğru yol: önce Unity Editor'da rename (GUID korunur) → sonra `git mv` (geçmiş takibi korunur). Bu iki adımın atlanması tüm prefab bağlantılarını koparabilirdi.
+- **3D model pivot/scale sorunlarının teşhisi**: "Meyve zemine giriyor" gibi görsel bir şikayet, BoxCollider center değerinin ölçekle çarpılmasıyla matematiksel kök nedene indirgenebilir. Prefab YAML'ı okuyarak `m_Center` ve `m_LocalScale` değerlerini doğrudan görmek, "ne kadar Y offset eklenmeli" sorusunu kesin olarak yanıtladı.
+- **Event-driven mimarinin tema bağımsızlığı kanıtlandı**: 5 günlük geliştirmede temanın "araç" yerine "meyve" olması oyun mantığında (pathfinding, matching, booster, save) sıfır değişiklik gerektirdi. Sistemler birbirini event channel üzerinden tanıdığı için isimleri önemsiz.
+- **Ücretsiz asset'lerin (Kenney) profesyonel prototipleme değeri**: CC0 lisanslı Kenney Food Kit, Pirate Kit ve UI Pack; telif riski olmadan hızlı görsel prototipleme sağladı. Gerçek kullanım senaryosunda "önce işlev, sonra görsel" prensibi ile entegre edildi.
+- **"Önce çalışır, sonra güzel" kararlarını kayıt altına almak**: Ana menü için level haritası yerine sade tek buton tercih edildiğinde bu karar günlüğe yazıldı. Gelecekte geri dönmek ya da staj değerlendirmesinde açıklamak için bu tür pivot noktalarını belgelemek önemli.
+
+---
+
 ## [TARİH GİRİLECEK] — Gün 4
 
 ### Yapılan İşler
