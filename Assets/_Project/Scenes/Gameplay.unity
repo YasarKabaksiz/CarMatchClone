@@ -1385,7 +1385,7 @@ MonoBehaviour:
   - fruitType: 1
     prefab: {fileID: 1720168925863219082, guid: cae6923aeeb95b4409fa9d2ee17bf193, type: 3}
   - fruitType: 3
-    prefab: {fileID: 1720168925863219082, guid: afe1b24bc3765ea46a8d5c1550a86ffc, type: 3}
+    prefab: {fileID: 4036252394491428618, guid: afe1b24bc3765ea46a8d5c1550a86ffc, type: 3}
   _poolManager: {fileID: 670052067}
   _onFruitSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
   _onCellVacatedChannel: {fileID: 11400000, guid: 745a464abe0bb99459673f17fc44670a, type: 2}
