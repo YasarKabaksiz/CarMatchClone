@@ -253,7 +253,8 @@ Sistemler birbirini doğrudan çağırmaz, aşağıdaki event'ler üzerinden hab
 OnBeforeFruitRemoved(Fruit fruit)  // Board, HandleFruitSelected başında (hücre değişmeden önce) fırlatır
                                    // → UndoBooster snapshot'ı bu event'te alır (race condition önlemi)
 OnFruitSelected(Fruit fruit)       // oyuncu/booster bir meyve seçti
-OnFruitReachedHolder(Fruit fruit)  // meyve holder entry'e ulaştı
+OnFruitReachedHolder(Fruit fruit)  // FruitMover tek parça tween'ini tamamladı (slot pozisyonunda);
+                                   // Holder match resolve + OnHolderProcessed başlatır
 OnCellVacated(GridCell cell)       // meyve board'dan ayrıldı → PathfindingService + ILaneObstacle tetiklenir
 OnBoardStateChanged()              // yeni meyve eklendi (reveal/spawn) → PathfindingService tetiklenir
 OnObstacleTriggered(ObstacleTriggerPayload)
@@ -263,6 +264,8 @@ OnHolderFull()
 OnGameOver()
 OnLevelComplete()
 OnCoinRewardEarned(int amount)    // Level Complete'te kazanılan coin miktarı (delta); LevelCompletePopup dinler
+OnSlotAssigned(SlotAssignedPayload) // Holder, OnFruitSelected anında slotu rezerve edip fırlatır;
+                                   // FruitMover payload.Position'ı son waypoint olarak kullanır (tek parça tween)
 OnBoosterUsed(BoosterType type)
 ```
 
@@ -350,7 +353,7 @@ Board'daki tüm dolu hücreleri toplar, Fisher-Yates ile türleri karıştırır
 
 ### Super Undo Booster
 
-**Aktif seçim mekanizması:** `Execute()` çağrısında `_holder.SetNextFruitInterceptor(PlaceInReserve)` set edilir. Bir sonraki meyve `OnFruitReachedHolder`'a ulaştığında Holder onu normal akışa sokmak yerine `PlaceInReserve`'e yönlendirir.
+**Aktif seçim mekanizması:** `Execute()` çağrısında `_holder.SetNextFruitInterceptor(PlaceInReserve)` set edilir. Bir sonraki meyve seçildiğinde (`OnFruitSelected`) Holder onu normal akışa sokmak yerine `PlaceInReserve`'e yönlendirir — meyve henüz board pozisyonundayken intercept edilir, animasyon başlamaz.
 
 `PlaceInReserve(Fruit fruit)`:
 - `fruit.IsReachable = false` — `GameInputHandler` tıklamayı reddeder.
@@ -450,7 +453,6 @@ Core/Pooling/
 9. UI/UX (ana menü, level haritası, popup'lar)
 10. Monetizasyon + Analytics entegrasyonu
 11. Polish (ses, VFX, haptic)
-    - **TODO (M4B'den):** Holder entry point sabit; meyve entry noktasından gerçek slot pozisyonuna kısa bir instant snap oluyor. Düzeltme: FruitMover'ın tween bitmeden önce Holder'dan hedef slot Transform'unu event-based sorgulayabilmesi (slot pozisyonu dinamik olarak döndürülür). Milestone 11 Polish kapsamında ele alınacak.
 
 **Kural:** Bir milestone tamamlanmadan sonrakine geçilmez. Her milestone sonunda test edilir, çalıştığı doğrulanır, ayrı bir Git commit ile kaydedilir.
 

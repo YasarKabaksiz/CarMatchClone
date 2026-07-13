@@ -362,8 +362,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Gameplay.FruitMover
   _stepDuration: 0.2
   _rollingRadius: 0.3
+  _slotTweenDuration: 0.15
   _onFruitSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
   _onFruitReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
+  _onSlotAssignedChannel: {fileID: 11400000, guid: eb63d6d559ba04f4aa0211cb09f4a9d3, type: 2}
+  _onFruitArrivedAtSlotChannel: {fileID: 11400000, guid: 8ef4b0d135164b54fafb9376de659467, type: 2}
 --- !u!1 &4639365181384733013
 GameObject:
   m_ObjectHideFlags: 0

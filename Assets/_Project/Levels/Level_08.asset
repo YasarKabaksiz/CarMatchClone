@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Data.LevelData
   cells:
   - position: {x: 0, y: 0}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -44,12 +44,12 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 6, y: 0}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
   - position: {x: 0, y: 1}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -59,12 +59,12 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 2, y: 1}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
   - position: {x: 3, y: 1}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -79,12 +79,12 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 6, y: 1}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
   - position: {x: 0, y: 2}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -114,7 +114,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 6, y: 2}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -134,7 +134,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 3, y: 3}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -169,7 +169,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 3, y: 4}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -194,7 +194,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 1, y: 5}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -224,7 +224,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 0, y: 6}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
@@ -289,7 +289,7 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 6, y: 7}
-    type: 1
+    type: 2
     color: 0
     facingDirection: 1
     garageColors: 
