@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using CarMatchClone.Core.Events;
 using CarMatchClone.Core.Pooling;
@@ -9,8 +10,9 @@ namespace CarMatchClone.Gameplay
     {
         [SerializeField] private int _maxSlots = 7;
         [SerializeField] private Transform[] _slotTransforms;
-        [SerializeField] private Transform _entryPoint;
+        [SerializeField] private FruitEventChannel _onFruitSelectedChannel;
         [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
+        [SerializeField] private FruitSlotEventChannel _onSlotAssignedChannel;
         [SerializeField] private ColorEventChannel _onMatchOccurredChannel;
         [SerializeField] private VoidEventChannel _onHolderFullChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
@@ -19,6 +21,7 @@ namespace CarMatchClone.Gameplay
 
         private Fruit[] _slots;
         private Fruit _lastAddedFruit;
+        private Fruit _transitFruit;
         private System.Action<Fruit> _nextFruitInterceptor;
 
         public bool IsFull
@@ -40,22 +43,28 @@ namespace CarMatchClone.Gameplay
 
         private void OnEnable()
         {
+            _onFruitSelectedChannel.Subscribe(HandleFruitSelected);
             _onFruitReachedHolderChannel.Subscribe(HandleFruitReachedHolder);
         }
 
         private void OnDisable()
         {
+            _onFruitSelectedChannel?.Unsubscribe(HandleFruitSelected);
             _onFruitReachedHolderChannel.Unsubscribe(HandleFruitReachedHolder);
+            _transitFruit = null;
         }
 
-        private void HandleFruitReachedHolder(Fruit fruit)
+        // Meyve seçildi: slotu hemen rezerve et, tween hedefini yayınla.
+        private void HandleFruitSelected(Fruit fruit)
         {
-            // SuperUndoBooster bir sonraki meyveyi yakalar; normal akış atlanır.
             if (_nextFruitInterceptor != null)
             {
                 var interceptor = _nextFruitInterceptor;
                 _nextFruitInterceptor = null;
                 interceptor(fruit);
+                // Tween hiç başlamadı — OnFruitReachedHolder asla fırlamaz.
+                // _moveLocked açmak için OnHolderProcessed'ı biz yükseltiyoruz.
+                _onHolderProcessedChannel?.Raise();
                 return;
             }
 
@@ -69,6 +78,29 @@ namespace CarMatchClone.Gameplay
             }
 
             InsertIntoSlot(fruit);
+            _transitFruit = fruit;
+
+            int slotIndex = -1;
+            for (int i = 0; i < _maxSlots; i++)
+                if (_slots[i] == fruit) { slotIndex = i; break; }
+
+            if (slotIndex >= 0)
+                _onSlotAssignedChannel.Raise(new SlotAssignedPayload
+                {
+                    Fruit    = fruit,
+                    Position = _slotTransforms[slotIndex].position
+                });
+        }
+
+        // Meyve tween'ini tamamladı: transit bitir, match resolve.
+        private void HandleFruitReachedHolder(Fruit fruit)
+        {
+            bool inSlots = false;
+            for (int i = 0; i < _maxSlots; i++)
+                if (_slots[i] == fruit) { inSlots = true; break; }
+            if (!inSlots) return;
+
+            _transitFruit = null;
             SnapAllFruits();
             ResolveMatches();
 
@@ -86,7 +118,6 @@ namespace CarMatchClone.Gameplay
         {
             int insertAt = -1;
 
-            // Find last slot containing same-color fruit; insert after it.
             for (int i = _maxSlots - 1; i >= 0; i--)
             {
                 if (_slots[i] != null && _slots[i].Color == fruit.Color)
@@ -96,7 +127,6 @@ namespace CarMatchClone.Gameplay
                 }
             }
 
-            // No same-color fruit found; use first empty slot.
             if (insertAt < 0)
             {
                 for (int i = 0; i < _maxSlots; i++)
@@ -107,7 +137,6 @@ namespace CarMatchClone.Gameplay
 
             if (insertAt < 0 || insertAt >= _maxSlots) return;
 
-            // Find first null at or after insertAt to shift into.
             int firstNull = -1;
             for (int i = insertAt; i < _maxSlots; i++)
             {
@@ -156,12 +185,11 @@ namespace CarMatchClone.Gameplay
         {
             for (int i = 0; i < _maxSlots; i++)
             {
-                if (_slots[i] != null)
+                if (_slots[i] != null && _slots[i] != _transitFruit)
                     _slots[i].transform.position = _slotTransforms[i].position;
             }
         }
 
-        // UndoBooster: en son eklenen meyveyi holder'dan çıkarır ve pool'a bırakır.
         public bool TryRemoveLastAdded()
         {
             if (_lastAddedFruit == null) return false;
@@ -170,11 +198,15 @@ namespace CarMatchClone.Gameplay
             {
                 if (_slots[i] == _lastAddedFruit)
                 {
+                    if (_transitFruit == _lastAddedFruit) _transitFruit = null;
                     _poolManager.Release(_lastAddedFruit.SourcePrefab, _lastAddedFruit.gameObject);
                     _slots[i] = null;
                     _lastAddedFruit = null;
                     CompactSlots();
                     SnapAllFruits();
+                    // Tween mid-flight'ta öldürüldüyse OnFruitReachedHolder fırlamaz.
+                    // _moveLocked açmak için OnHolderProcessed'ı biz yükseltiyoruz.
+                    _onHolderProcessedChannel?.Raise();
                     return true;
                 }
             }
@@ -183,22 +215,20 @@ namespace CarMatchClone.Gameplay
             return false;
         }
 
-        // SuperUndoBooster: bir sonraki holder'a gelen meyveyi yakalar; tek seferlik.
         public void SetNextFruitInterceptor(System.Action<Fruit> interceptor)
         {
             _nextFruitInterceptor = interceptor;
         }
 
-        // MagnetBooster: holder'daki dolu slotların tiplerini döndürür.
         public FruitType[] GetOccupiedColors()
         {
-            var result = new System.Collections.Generic.List<FruitType>();
+            var result = new List<FruitType>();
             for (int i = 0; i < _maxSlots; i++)
                 if (_slots[i] != null) result.Add(_slots[i].Color);
             return result.ToArray();
         }
 
-        // SuperUndoBooster: rezerv slottan geri gelen meyveyi normal akışla holder'a ekler.
+        // ForceAddFruit (SuperUndoBooster): rezervden gelen meyve, instant snap.
         public void ForceAddFruit(Fruit fruit)
         {
             if (IsFull) return;
@@ -215,7 +245,6 @@ namespace CarMatchClone.Gameplay
             _onHolderProcessedChannel?.Raise();
         }
 
-        // Retry/Level Complete: tüm slotları boşaltır, meyveleri pool'a iade eder.
         public void ClearAllSlots()
         {
             for (int i = 0; i < _maxSlots; i++)
@@ -227,6 +256,7 @@ namespace CarMatchClone.Gameplay
                 }
             }
             _lastAddedFruit = null;
+            _transitFruit = null;
             _nextFruitInterceptor = null;
         }
 

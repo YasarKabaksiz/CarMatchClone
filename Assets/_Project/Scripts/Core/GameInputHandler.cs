@@ -9,6 +9,7 @@ namespace CarMatchClone.Core
     {
         [SerializeField] private FruitEventChannel  _onFruitSelectedChannel;
         [SerializeField] private FruitEventChannel  _onFruitReachedHolderChannel;
+        [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private VoidEventChannel _onGameOverChannel;
         [SerializeField] private VoidEventChannel _onLevelCompleteChannel;
         [SerializeField] private VoidEventChannel _onNewLevelLoadedChannel;
@@ -23,6 +24,7 @@ namespace CarMatchClone.Core
             _clickAction.performed += OnClick;
             _clickAction.Enable();
             _onFruitReachedHolderChannel.Subscribe(HandleFruitReachedHolder);
+            _onHolderProcessedChannel?.Subscribe(HandleHolderProcessed);
             _onGameOverChannel.Subscribe(HandleGameOver);
             _onLevelCompleteChannel.Subscribe(HandleLevelComplete);
             _onNewLevelLoadedChannel.Subscribe(HandleNewLevelLoaded);
@@ -34,12 +36,14 @@ namespace CarMatchClone.Core
             _clickAction.Disable();
             _clickAction.Dispose();
             _onFruitReachedHolderChannel.Unsubscribe(HandleFruitReachedHolder);
+            _onHolderProcessedChannel?.Unsubscribe(HandleHolderProcessed);
             _onGameOverChannel.Unsubscribe(HandleGameOver);
             _onLevelCompleteChannel.Unsubscribe(HandleLevelComplete);
             _onNewLevelLoadedChannel.Unsubscribe(HandleNewLevelLoaded);
         }
 
         private void HandleFruitReachedHolder(Fruit fruit) => _moveLocked = false;
+        private void HandleHolderProcessed()               => _moveLocked = false;
         private void HandleGameOver()                       => _inputLocked = true;
         private void HandleLevelComplete()                  => _inputLocked = true;
         private void HandleNewLevelLoaded()                 { _inputLocked = false; _moveLocked = false; }
