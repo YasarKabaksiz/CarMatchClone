@@ -6,6 +6,122 @@ Bu dosya, staj defteri hazırlarken referans alınmak üzere günlük çalışma
 
 ---
 
+## [TARİH GİRİLECEK] — Gün 9
+
+**Proje:** Car Match Clone
+
+### Yapılan İşler
+
+Gün 7'deki toplantıda alınan polish listesi bu gün uygulandı. Ayrıca ses sistemi temelden kuruldu. Toplam 6 polish maddesi + ses sistemi tamamlandı.
+
+**1. VFX Kaynak Değişikliği — Kenney → JMO Assets**
+
+Başlangıçta Kenney Particle Pack ile entegrasyon denendi (Madde 1: tıklama spark efekti). Ancak şu sorunlarla karşılaşıldı:
+
+- `Particles/Alpha Blended` (fileID 200) shader URP'de düzgün çalışmıyor — opak dikdörtgen (kare artefakt) oluşuyor
+- URP için `Universal Render Pipeline/Particles/Unlit` shader'ına geçiş ve `_ZWrite: 0`, `_Surface: 1` (Transparent), doğru SrcBlend/DstBlend değerleri ayarlandı
+- Tüm bu çabaya rağmen kullanıcının Kenney VFX klasörünü silip JMO Assets (Cartoon FX Remaster Free) import ettiği anlaşıldı
+
+Karar: Tüm Kenney VFX denemeleri geri alındı (`git checkout ebe2f45 -- Assets/_Project/Prefabs/Fruits/` ile Fruit prefabları temizlendi), JMO Assets ile devam edildi.
+
+**2. Polish Madde 1 — Tıklama Anı Spark Efekti (CFXR Hit D 3D)**
+
+- `Fruit.cs`'e `[SerializeField] private GameObject _selectionVfxPrefab` eklendi
+- `PlaySelectionEffect()`: her tıklamada `Instantiate()` ile efekt yaratılıyor, CFXR kendi kendini destroy ediyor — kalıcı child referans yerine geçici instantiate yaklaşımı seçildi
+- `GameInputHandler.cs`: `fruit.PlaySelectionEffect()` çağrısı, `OnFruitSelectedChannel.Raise()` öncesine eklendi
+
+**3. Polish Madde 5 — 3'lü Eşleşme Puf Efekti (CFXR Magic Poof)**
+
+- `Holder.cs`'e `[SerializeField] private GameObject _matchPuffPrefab` eklendi
+- `SpawnMatchPuff(Vector3 position)`: Instantiate + CFXR auto-destroy
+- `ResolveMatches()` içinde, her eşleşen fruit pool'a iade edilmeden önce `SpawnMatchPuff` çağrılıyor — VFX ve compact animasyonu eş zamanlı başlıyor
+
+**4. Polish Madde 2 — Hareket Sırasında Duman İzi (CFXR Smoke Source 3D)**
+
+- `FruitMover.cs`'e `[SerializeField] private GameObject _smokeTrailPrefab` eklendi
+- Hareket başlayınca `Instantiate` ile fruit'e child olarak ekleniyor; `ParticleSystem.main` üzerinden runtime'da override:
+  - `simulationSpace = World` → parçacıklar meyvenin rotasyonundan etkilenmiyor
+  - `startSpeed = 0` → parçacıklar emisyon noktasında kalıp soluyor (trail hissi)
+  - `startLifetime = 0.35s`, `rateOverTime = 40` → yoğun kısa iz
+- Hareket bitince `SetParent(null)` + `Stop()` → CFXR kalan parçacıklarla birlikte kendi kendini destroy ediyor
+
+**5. Polish Madde 3 — Slota Varış Zıplama Arkı (Jump Arc)**
+
+- `FruitMover.cs`'e `_jumpHeight = 0.4f` ve `_lastStepDuration = 0.25f` eklendi
+- `_jumpYOffset` float field'ı ile implementasyon: DOTween Sequence'ına son waypoint için `Join` ile sub-sequence eklendi — ilk yarı OutQuad (yukarı), ikinci yarı InQuad (aşağı)
+- `OnUpdate`'te `transform.position = _pathPos + Vector3.up * _jumpYOffset + ...` — rolling rotation sistemi dokunulmadı, sadece Y'ye ek offset eklendi
+- Board içi hareket düz rolling, sadece son adım (board kenarı → slot) zıplama arkı çiziyor
+
+**6. Polish Madde 4 + 6 — Animasyonlu Slot Kayması (SnapAllFruits → DOJump)**
+
+- `Holder.cs`'e `using DG.Tweening` eklendi
+- `SnapAllFruits()` anlık `transform.position` atamasından `DOTween.Kill(transform)` + `DOJump(targetPos, _snapJumpPower, 1, _snapDuration)` desenine geçildi
+- Parametreler: `_snapDuration = 0.15f`, `_snapJumpPower = 0.1f` — FruitMover'ın 0.4f jump height'ının çok altında, "reorganizasyon" hissi veriyor
+- `DOTween.Kill` guard'ı: rapid input durumunda eski snap tween kesilip yeni pozisyon tween'i başlar, titreme olmaz
+- `OnHolderProcessed` zamanlaması değişmedi — compact animasyonu arka planda görsel katmanda koşuyor
+
+**7. Hareket Hızı İyileştirmesi**
+
+- `_stepDuration: 0.2f → 0.1f` (board içi, hücre başına)
+- `_lastStepDuration: 0.4f → 0.25f` (slot zıplaması)
+- Tipik 4 hücrelik path: 0.2s×4+0.4s=1.2s → 0.1s×4+0.25s=0.65s — belirgin çevik his
+
+**8. Ses Sistemi — AudioManager**
+
+*Temel sistem:*
+- `AudioManager.cs` oluşturuldu: event channel'lara abone olan, `PlayOneShot` kullanan, per-scene MonoBehaviour
+- İki ayrı `AudioSource`: biri SFX (PlayOneShot), biri müzik (Loop=true)
+- `AudioClip[]` dizileri + rastgele seçim: `_fruitSelectedSounds`, `_matchSounds` — aynı sesin tekrar monotonluğunu kırıyor
+- Tekil `AudioClip`: `_boosterSound`, `_levelCompleteSound`, `_gameOverSound`, `_uiClickSound`
+- `AudioListener.volume = PlayerPrefs.GetFloat("MasterVolume", 1f)` — Awake'de yükleniyor; `SetMasterVolume()` public API gelecek Ayarlar ekranına hazır
+
+*Arka plan müziği:*
+- Gameplay sahnesi: Track 3 (Supermart) — döngülü
+- MainMenu sahnesi: Track 7 (My Farm) — döngülü
+- Her sahnenin AudioManager Inspector'ında farklı clip atanıyor; DontDestroyOnLoad kullanılmadı (singleton yok)
+
+*UI tıklama sesi:*
+- `AudioManager.PlayUIClick()` public metodu
+- Play, Continue, Retry, Ana Menüye Dön butonlarının OnClick() event'ine bağlandı
+
+*Yuvarlanma sesi:*
+- `FruitMover.cs`'e `[SerializeField] private AudioSource _rollSound` eklendi
+- Her Fruit prefabında child `RollSound` AudioSource (Loop=true, Play On Awake=false)
+- Tween başlangıcında `Play()`, OnComplete'de ve OnDisable'da `Stop()`
+
+### Commit Özeti
+
+| Commit | İçerik |
+|---|---|
+| `ff7a3e7` | JMO Assets VFX entegrasyonu (Madde 1/2/5) |
+| `a0dfc39` | Jump arc animasyonu (Madde 3) |
+| `eb7436b` | SnapAllFruits animasyonlu (Madde 4/6) |
+| `3d36bf5` | Hareket hızı + DOJump |
+| `3614a75` | AudioManager temel sistem |
+| `d299fee` | Müzik + UI click + yuvarlanma sesi |
+
+### Kullanılan Araçlar/Teknikler
+- Unity 3D (URP), C#, DOTween (Sequence, Join, DOJump, DOMove), JMO Assets (Cartoon FX Remaster Free), Kenney UI Audio / Interface Sounds, ScriptableObject Event Channel Pattern, ParticleSystem runtime override (MainModule, EmissionModule), AudioSource / PlayOneShot, PlayerPrefs, Git/GitHub, Claude Code (AI-assisted development)
+
+### Öğrenilenler / Notlar
+- **URP'de particle shader uyumluluğu**: Legacy `Particles/Alpha Blended` (fileID 200) şeffaflık URP'de düzgün çalışmıyor; URP Particles/Unlit + `_ZWrite: 0` + doğru blend modu zorunlu. Sorun genellikle "kare artefakt" olarak kendini gösteriyor.
+- **CFXR auto-destroy ile kalıcı child çakışması**: JMO Assets'in one-shot efektleri kendi kendini destroy ediyor; bu efektleri pool'lanmış objelerin kalıcı child'ı yapmak pool hiyerarşisini bozuyor. Çözüm: her tetiklemede `Instantiate`, referans tutma, CFXR'ın kendi lifecycle'ına bırakma.
+- **DOTween.Kill guard'ının önemi**: Animasyonlu kompakt (SnapAllFruits) + hızlı tıklama kombinasyonunda eski tween'i Kill etmeden yeni tween başlatmak titreme/çakışma yaratıyor. Her DOMove/DOJump öncesi `DOTween.Kill(transform)` bu riski sıfırlıyor.
+- **Ses seviyesi için AudioListener.volume global kontrol noktasıdır**: PlayOneShot + per-source volume karmaşıklığı yerine `AudioListener.volume` tek noktadan tüm sesleri kontrol ediyor. PlayerPrefs ile persist etmek 1 satır.
+- **Polish ≠ kosmetik**: Hareket hızı, zıplama arkı, ses feedback'i bir arada kullanıcının "kontrol hissi"ni doğrudan etkiliyor. Bir oyunun "polished" hissettirmesi çoğunlukla tek bir büyük özellikten değil, onlarca küçük tutarlı karardan oluşuyor.
+
+---
+
+## [TARİH GİRİLECEK] — Gün 8
+
+**Proje:** Car Match Clone
+
+### Yapılan İşler
+
+Tatil — çalışma yapılmadı.
+
+---
+
 ## [TARİH GİRİLECEK] — Gün 7
 
 **Proje:** Car Match Clone
