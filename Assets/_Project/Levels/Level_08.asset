@@ -229,8 +229,8 @@ MonoBehaviour:
     facingDirection: 1
     garageColors: 
   - position: {x: 1, y: 6}
-    type: 0
-    color: 6
+    type: 2
+    color: 0
     facingDirection: 1
     garageColors: 
   - position: {x: 2, y: 6}
@@ -245,12 +245,12 @@ MonoBehaviour:
     garageColors: 
   - position: {x: 4, y: 6}
     type: 3
-    color: 3
+    color: 5
     facingDirection: 1
     garageColors: 
   - position: {x: 5, y: 6}
-    type: 0
-    color: 4
+    type: 2
+    color: 0
     facingDirection: 1
     garageColors: 
   - position: {x: 6, y: 6}

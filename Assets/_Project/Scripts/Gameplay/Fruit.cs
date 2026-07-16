@@ -12,9 +12,17 @@ namespace CarMatchClone.Gameplay
         public GameObject SourcePrefab { get; set; }
 
         [Header("Spawn Efekti")]
-        [SerializeField] private float _spawnPopDuration  = 0.25f;  // scale 0→1 süresi
-        [SerializeField] private float _spawnHopHeight    = 0.12f;  // yukarı sıçrama mesafesi (local Y)
-        [SerializeField] private float _spawnHopDuration  = 0.12f;  // yukarı / aşağı her adım süresi
+        [SerializeField] private float _spawnPopDuration  = 0.25f;
+        [SerializeField] private float _spawnHopHeight    = 0.12f;
+        [SerializeField] private float _spawnHopDuration  = 0.12f;
+
+        [Header("Seçim VFX")]
+        [SerializeField] private ParticleSystem _selectionVfx;
+
+        public void PlaySelectionEffect()
+        {
+            _selectionVfx?.Play();
+        }
 
         // GarageSpawner spawn olduğunda Board tarafından çağrılır.
         // Mantık (OnBoardStateChanged) zaten tetiklendikten SONRA çağrıldığından

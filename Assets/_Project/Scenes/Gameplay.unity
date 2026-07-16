@@ -328,9 +328,9 @@ MonoBehaviour:
   _onRetryRequestedChannel: {fileID: 11400000, guid: 1c8449fc1c03c8b4b85f7577d7c26137, type: 2}
   _debugLogging: 0
   _levels:
-  - {fileID: 11400000, guid: 1be6316447d3c734a8ab0c7116f7183a, type: 2}
-  - {fileID: 11400000, guid: d8666a48e76b5b64986efc3014373b94, type: 2}
   - {fileID: 11400000, guid: 0ae83593956ff1745a50f861751b6fdc, type: 2}
+  - {fileID: 11400000, guid: d8666a48e76b5b64986efc3014373b94, type: 2}
+  - {fileID: 11400000, guid: 1be6316447d3c734a8ab0c7116f7183a, type: 2}
   - {fileID: 11400000, guid: ebb9354bd64399f40bf93e1c4da33072, type: 2}
   - {fileID: 11400000, guid: 1cf048be830733640bd91b155e55a79f, type: 2}
   - {fileID: 11400000, guid: 4f6434cb1aafc2745a6729245153df69, type: 2}

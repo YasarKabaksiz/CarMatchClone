@@ -59,6 +59,7 @@ namespace CarMatchClone.Core
             if (fruit != null && fruit.IsReachable)
             {
                 _moveLocked = true;
+                fruit.PlaySelectionEffect();
                 _onFruitSelectedChannel.Raise(fruit);
             }
         }
