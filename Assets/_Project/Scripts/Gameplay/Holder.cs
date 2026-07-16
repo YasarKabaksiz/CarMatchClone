@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 using CarMatchClone.Core.Events;
 using CarMatchClone.Core.Pooling;
 using CarMatchClone.Data;
@@ -19,6 +20,7 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
         [SerializeField] private GameObject _matchPuffPrefab;
+        [SerializeField] private float _snapDuration = 0.15f;
 
         private Fruit[] _slots;
         private Fruit _lastAddedFruit;
@@ -194,7 +196,11 @@ namespace CarMatchClone.Gameplay
             for (int i = 0; i < _maxSlots; i++)
             {
                 if (_slots[i] != null && _slots[i] != _transitFruit)
-                    _slots[i].transform.position = _slotTransforms[i].position;
+                {
+                    DOTween.Kill(_slots[i].transform);
+                    _slots[i].transform.DOMove(_slotTransforms[i].position, _snapDuration)
+                        .SetEase(Ease.OutQuad);
+                }
             }
         }
 
