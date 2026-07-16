@@ -6,6 +6,89 @@ Bu dosya, staj defteri hazırlarken referans alınmak üzere günlük çalışma
 
 ---
 
+## [TARİH GİRİLECEK] — Gün 7
+
+**Proje:** Car Match Clone
+
+### Yapılan İşler
+
+Bu gün staj yerinde ekip toplantısı yapıldı. Teknik geliştirme yerine iletişim ve planlama odaklı bir gündü.
+
+- Son toplantıdan bu yana gerçekleştirilen çalışmalar (Gün 6 kapsamı: entry point temizliği, UI görsel kimliği, ana menü vitrin sahnesi) mentöre ve ekibe sunuldu
+- Yapılan teknik kararlar (görsel-only ham model kullanımı, Kenney asset entegrasyonu, event bus temizliği) gerekçeleriyle aktarıldı
+- Devam süreci netleştirildi: mentör tarafından bir **polish listesi** verilecek; bu liste **cuma gününe kadar** tamamlanacak
+
+### Sonraki Adımlar
+
+- Polish listesinin teslim alınması bekleniyor
+- Liste kapsamı netleşince görevler öncelik sırasına konulacak ve uygulamaya geçilecek
+- Hedef: cuma günü tüm polish görevleri tamamlanmış, oynanabilir ve görsel olarak sunuma hazır bir prototip
+
+### Kullanılan Araçlar/Teknikler
+- Sözlü sunum, ekip iletişimi
+
+### Öğrenilenler / Notlar
+- Yapılan teknik çalışmaları teknik olmayan dinleyicilere (ya da farklı uzmanlıktaki ekip üyelerine) özetlerken "ne yaptım"dan çok "neden yaptım ve ne kazandım" ekseninde konuşmak daha etkili oldu
+- Polish aşaması, bir prototipin "çalışıyor" olmaktan "sunuma hazır" olmaya geçişini temsil eder; bu aşamada görsel tutarlılık ve kullanıcı deneyimi ön plana çıkıyor
+
+---
+
+## [TARİH GİRİLECEK] — Gün 6
+
+**Proje:** Car Match Clone
+
+### Yapılan İşler
+
+Bir önceki günün son commit'i olan `feat(ui): MainMenu vitrin sahnesi...`'den itibaren değerlendirildiğinde, Gün 5'in bitiş noktasından bu yana aşağıdaki çalışmalar tamamlandı.
+
+**1. Entry Point Kaldırma — Son Düzeltme ve Temizlik**
+
+*Zamanlama Düzeltmesi:*
+- Holder'daki meyvelerin tıklama anında değil, yeni meyve gerçekten slota ulaştığında kayması sağlandı
+- `SnapAllFruits` çağrısı, meyve varış animasyonunun `OnComplete` callback'ine taşındı — böylece slot kaymaları ve yeni meyve yerleşimi görsel olarak senkronize hale getirildi
+
+*Kalıntı Temizliği (ayrı commit'ler):*
+- `HolderEntryPoint.cs` script'i ve sahnedeki ilgili obje silindi
+- `OnFruitArrivedAtSlot.asset` event channel asset'i kaldırıldı
+- Prefab YAML dosyalarındaki stale (artık referans almayan) alanlar temizlendi
+- Temizlik `feat` değil `chore` prefix'iyle commit edildi — davranış değişmeden yalnızca kalıntılar kaldırıldı
+
+**2. UI Görsel Kimliği Tamamlandı**
+
+*HUD ve Popup'lar:*
+- Kenney UI Kit; level-içi HUD, Level Complete ve Game Over popup'larına uygulandı
+- Renk-anlam sistemi tutarlı hale getirildi (mavi=aksiyon, sarı=ödül, kırmızı=tehlike)
+
+*Booster İkonları:*
+- Kenney Game Icons seti kullanılarak booster butonlarına tematik ikonlar eklendi:
+  - **Undo** → `rewind` ikonu
+  - **Super Undo** → `shoppingBasket` ikonu
+  - Shuffle ve Magnet için alternatif ikonlar da denendi, en uygun görsel seçildi
+
+**3. Ana Menü Vitrin Sahnesi**
+
+*SlowRotate Utility Component:*
+- `SlowRotate.cs` oluşturuldu: herhangi bir transform'u Inspector'dan ayarlanabilir hızda sürekli döndüren genel amaçlı yardımcı bileşen
+
+*MainMenu Sahnesine 3D Model Yerleşimi:*
+- Portakal ve dekor objeleri (bowl, crate, chest, barrel) ham FBX mesh olarak sahneye eklendi
+- **Önemli karar:** Gerçek `Fruit` veya `FruitMover` prefabları kullanılmadı — bu prefablar `OnEnable`'da event channel'lara subscribe olduğundan, MainMenu sahnesinde doğrudan kullanımları boş ScriptableObject referanslarına yol açıp crash'e neden olabilirdi. Ham mesh kullanımı bu riski sıfırladı.
+- Dönen portakal (`SlowRotate`) vitrin odak noktası olarak konumlandırıldı; dekor objeleri çevresine yerleştirildi
+- Kamera pozisyonu vitrin açısını verecek şekilde ayarlandı
+
+*Arka Plan Düzeltmesi:*
+- Kamera `Clear Flags` ayarı `Skybox`'tan `Solid Color`'a çevrildi — sahnenin istem dışı skybox görüntülemesi giderildi
+
+### Kullanılan Araçlar/Teknikler
+- Unity 3D (URP), C#, DOTween, ScriptableObject Event Channel Pattern, Git/GitHub, Claude Code (AI-assisted development), Kenney UI Pack / Kenney Game Icons (CC0), Unity prefab YAML düzenleme
+
+### Öğrenilenler / Notlar
+- **Menü sahnelerinde gameplay prefablarını doğrudan kullanmanın riskleri**: `FruitMover` gibi bileşenler `OnEnable`'da event channel'lara subscribe olur; bu channel'lar MainMenu sahnesinde inject edilmediği için null reference crash'i oluşur. Görsel amaçlı kullanımda ham MeshFilter + MeshRenderer yeterli — bağımlılıkları olan prefab'ı hiç instantiate etmemek daha güvenli.
+- **UI tasarım sistemi tutarlılığının önemi**: Renk-anlam eşleştirmesi (mavi, kırmızı, sarı, yeşil, gri) ve ikon kaynağı tutarlılığı (tüm ikonlar Kenney Game Icons'tan) bir "tasarım dili" oluşturur. Bu dili erken belgelemek, sonradan eklenen ekran/butonların sisteme uyumlu kalmasını sağlar.
+- **`chore` vs `feat` prefix kararı**: Kalıntı temizliği (kullanılmayan dosyaları silmek, stale YAML alanlarını temizlemek) davranış değiştirmez — `chore` ile commit edilmeli. Aynı günde hem `feat` hem `chore` commit'i olması normal; karışık commit yapmak git geçmişini okunaksız kılar.
+
+---
+
 ## [TARİH GİRİLECEK] — Gün 5
 
 ### Yapılan İşler
