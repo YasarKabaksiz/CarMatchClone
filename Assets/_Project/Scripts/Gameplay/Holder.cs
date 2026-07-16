@@ -20,7 +20,8 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
         [SerializeField] private GameObject _matchPuffPrefab;
-        [SerializeField] private float _snapDuration = 0.15f;
+        [SerializeField] private float _snapDuration   = 0.15f;
+        [SerializeField] private float _snapJumpPower  = 0.1f;
 
         private Fruit[] _slots;
         private Fruit _lastAddedFruit;
@@ -198,8 +199,7 @@ namespace CarMatchClone.Gameplay
                 if (_slots[i] != null && _slots[i] != _transitFruit)
                 {
                     DOTween.Kill(_slots[i].transform);
-                    _slots[i].transform.DOMove(_slotTransforms[i].position, _snapDuration)
-                        .SetEase(Ease.OutQuad);
+                    _slots[i].transform.DOJump(_slotTransforms[i].position, _snapJumpPower, 1, _snapDuration);
                 }
             }
         }

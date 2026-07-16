@@ -7007,7 +7007,8 @@ MonoBehaviour:
   _onHolderProcessedChannel: {fileID: 11400000, guid: c6c648288780a0046b04e61b0505415c, type: 2}
   _poolManager: {fileID: 670052067}
   _matchPuffPrefab: {fileID: 9157105887711914197, guid: c4f829cb7dd4b864caf8832ec5b1ee55, type: 3}
-  _snapDuration: 0.4
+  _snapDuration: 0.5
+  _snapJumpPower: 1.5
 --- !u!1 &1915436079
 GameObject:
   m_ObjectHideFlags: 0

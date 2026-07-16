@@ -7,14 +7,14 @@ namespace CarMatchClone.Gameplay
 {
     public class FruitMover : MonoBehaviour
     {
-        [SerializeField] private float _stepDuration  = 0.2f;
+        [SerializeField] private float _stepDuration  = 0.1f;
         [SerializeField] private float _rollingRadius = 0.5f;
         [SerializeField] private FruitSlotEventChannel _onSlotAssignedChannel;
         [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
 
         [Header("Slot Zıplama")]
         [SerializeField] private float _jumpHeight        = 0.4f;
-        [SerializeField] private float _lastStepDuration  = 0.4f;
+        [SerializeField] private float _lastStepDuration  = 0.25f;
 
         [Header("Hareket VFX")]
         [SerializeField] private GameObject _smokeTrailPrefab;
