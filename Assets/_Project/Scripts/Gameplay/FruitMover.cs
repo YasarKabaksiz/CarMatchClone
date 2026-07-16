@@ -12,6 +12,15 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private FruitSlotEventChannel _onSlotAssignedChannel;
         [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
 
+        [Header("Hareket VFX")]
+        [SerializeField] private GameObject _smokeTrailPrefab;
+        [SerializeField] private float _smokeStartSize     = 0.15f;
+        [SerializeField] private float _smokeStartSpeed    = 0f;
+        [SerializeField] private float _smokeStartLifetime = 0.35f;
+        [SerializeField] private float _smokeEmissionRate  = 40f;
+
+        private GameObject _activeSmokeTrail;
+
         private Fruit _fruit;
         private CarMatchClone.Board.Board _board;
         private CarMatchClone.Board.PathfindingService _pathfindingService;
@@ -44,11 +53,35 @@ namespace CarMatchClone.Gameplay
             _onSlotAssignedChannel?.Unsubscribe(HandleSlotAssigned);
             _sequence?.Kill();
             _sequence = null;
+            if (_activeSmokeTrail != null)
+            {
+                _activeSmokeTrail.transform.SetParent(null);
+                var ps = _activeSmokeTrail.GetComponent<ParticleSystem>();
+                if (ps != null) ps.Stop();
+                _activeSmokeTrail = null;
+            }
         }
 
         private void HandleSlotAssigned(SlotAssignedPayload payload)
         {
             if (payload.Fruit != _fruit) return;
+
+            if (_smokeTrailPrefab != null)
+            {
+                _activeSmokeTrail = Instantiate(_smokeTrailPrefab, transform.position, Quaternion.identity, transform);
+                var ps = _activeSmokeTrail.GetComponent<ParticleSystem>();
+                if (ps != null)
+                {
+                    var main = ps.main;
+                    main.simulationSpace = ParticleSystemSimulationSpace.World;
+                    main.startSize       = new ParticleSystem.MinMaxCurve(_smokeStartSize);
+                    main.startSpeed      = new ParticleSystem.MinMaxCurve(_smokeStartSpeed);
+                    main.startLifetime   = new ParticleSystem.MinMaxCurve(_smokeStartLifetime);
+                    var emission = ps.emission;
+                    emission.rateOverTime = new ParticleSystem.MinMaxCurve(_smokeEmissionRate);
+                    ps.Play();
+                }
+            }
 
             var gridPath = _pathfindingService.GetPathToExit(_fruit.GridPosition, _board);
 
@@ -91,6 +124,13 @@ namespace CarMatchClone.Gameplay
 
             _sequence.OnComplete(() =>
             {
+                if (_activeSmokeTrail != null)
+                {
+                    _activeSmokeTrail.transform.SetParent(null);
+                    var ps = _activeSmokeTrail.GetComponent<ParticleSystem>();
+                    if (ps != null) ps.Stop();
+                    _activeSmokeTrail = null;
+                }
                 transform.rotation = Quaternion.identity;
                 transform.position = payload.Position;
                 _onFruitReachedHolderChannel.Raise(_fruit);

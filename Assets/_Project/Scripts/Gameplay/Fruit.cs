@@ -17,11 +17,12 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private float _spawnHopDuration  = 0.12f;
 
         [Header("Seçim VFX")]
-        [SerializeField] private ParticleSystem _selectionVfx;
+        [SerializeField] private GameObject _selectionVfxPrefab;
 
         public void PlaySelectionEffect()
         {
-            _selectionVfx?.Play();
+            if (_selectionVfxPrefab == null) return;
+            Instantiate(_selectionVfxPrefab, transform.position, Quaternion.identity);
         }
 
         // GarageSpawner spawn olduğunda Board tarafından çağrılır.

@@ -18,6 +18,7 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private VoidEventChannel _onGameOverChannel;
         [SerializeField] private VoidEventChannel _onHolderProcessedChannel;
         [SerializeField] private ObjectPoolManager _poolManager;
+        [SerializeField] private GameObject _matchPuffPrefab;
 
         private Fruit[] _slots;
         private Fruit _lastAddedFruit;
@@ -160,6 +161,7 @@ namespace CarMatchClone.Gameplay
                 FruitType fruitType = _slots[matchStart].Color;
                 for (int i = matchStart; i < matchStart + 3; i++)
                 {
+                    SpawnMatchPuff(_slots[i].transform.position);
                     _poolManager.Release(_slots[i].SourcePrefab, _slots[i].gameObject);
                     _slots[i] = null;
                 }
@@ -167,6 +169,12 @@ namespace CarMatchClone.Gameplay
                 SnapAllFruits();
                 _onMatchOccurredChannel.Raise(fruitType);
             }
+        }
+
+        private void SpawnMatchPuff(Vector3 position)
+        {
+            if (_matchPuffPrefab == null) return;
+            Instantiate(_matchPuffPrefab, position, Quaternion.identity);
         }
 
         private void CompactSlots()
