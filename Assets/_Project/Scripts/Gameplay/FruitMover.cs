@@ -12,6 +12,10 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private FruitSlotEventChannel _onSlotAssignedChannel;
         [SerializeField] private FruitEventChannel _onFruitReachedHolderChannel;
 
+        [Header("Slot Zıplama")]
+        [SerializeField] private float _jumpHeight        = 0.4f;
+        [SerializeField] private float _lastStepDuration  = 0.4f;
+
         [Header("Hareket VFX")]
         [SerializeField] private GameObject _smokeTrailPrefab;
         [SerializeField] private float _smokeStartSize     = 0.15f;
@@ -19,7 +23,8 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private float _smokeStartLifetime = 0.35f;
         [SerializeField] private float _smokeEmissionRate  = 40f;
 
-        private GameObject _activeSmokeTrail;
+        private float       _jumpYOffset;
+        private GameObject  _activeSmokeTrail;
 
         private Fruit _fruit;
         private CarMatchClone.Board.Board _board;
@@ -97,14 +102,28 @@ namespace CarMatchClone.Gameplay
             _pathPos = transform.position;
             Vector3 prevPathPos = _pathPos;
 
+            _jumpYOffset = 0f;
             _sequence?.Kill();
             _sequence = DOTween.Sequence();
-            foreach (var wp in worldPath)
+            for (int i = 0; i < worldPath.Count; i++)
             {
-                Vector3 capturedWp = wp;
+                Vector3 capturedWp = worldPath[i];
+                bool    isLast     = i == worldPath.Count - 1;
+                float   dur        = isLast ? _lastStepDuration : _stepDuration;
+
                 _sequence.Append(
-                    DOTween.To(() => _pathPos, x => _pathPos = x, capturedWp, _stepDuration)
+                    DOTween.To(() => _pathPos, x => _pathPos = x, capturedWp, dur)
                     .SetEase(Ease.Linear));
+
+                if (isLast && _jumpHeight > 0f)
+                {
+                    float half = dur * 0.5f;
+                    _sequence.Join(
+                        DOTween.Sequence()
+                            .Append(DOTween.To(() => _jumpYOffset, y => _jumpYOffset = y, _jumpHeight, half).SetEase(Ease.OutQuad))
+                            .Append(DOTween.To(() => _jumpYOffset, y => _jumpYOffset = y, 0f,          half).SetEase(Ease.InQuad))
+                    );
+                }
             }
 
             _sequence.OnUpdate(() =>
@@ -119,11 +138,12 @@ namespace CarMatchClone.Gameplay
                 prevPathPos = _pathPos;
 
                 Vector3 centerVec  = Vector3.up * _meshCenterY;
-                transform.position = _pathPos + centerVec - transform.rotation * centerVec;
+                transform.position = _pathPos + Vector3.up * _jumpYOffset + centerVec - transform.rotation * centerVec;
             });
 
             _sequence.OnComplete(() =>
             {
+                _jumpYOffset = 0f;
                 if (_activeSmokeTrail != null)
                 {
                     _activeSmokeTrail.transform.SetParent(null);

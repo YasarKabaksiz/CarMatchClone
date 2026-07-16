@@ -1427,8 +1427,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.62932044, y: 0, z: 0, w: 0.777146}
-  m_LocalPosition: {x: 0, y: 18.372673, z: -10.305231}
+  m_LocalRotation: {x: 0.57429105, y: 0, z: 0, w: 0.8186512}
+  m_LocalPosition: {x: 0, y: 17.661552, z: -12.793393}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7006,6 +7006,7 @@ MonoBehaviour:
   _onGameOverChannel: {fileID: 11400000, guid: eee5c3719b03b574297a7e5fad7b95e6, type: 2}
   _onHolderProcessedChannel: {fileID: 11400000, guid: c6c648288780a0046b04e61b0505415c, type: 2}
   _poolManager: {fileID: 670052067}
+  _matchPuffPrefab: {fileID: 9157105887711914197, guid: c4f829cb7dd4b864caf8832ec5b1ee55, type: 3}
 --- !u!1 &1915436079
 GameObject:
   m_ObjectHideFlags: 0
@@ -7206,7 +7207,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1945997746
 MonoBehaviour:
   m_ObjectHideFlags: 0

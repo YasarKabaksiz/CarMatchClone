@@ -146,4 +146,10 @@ MonoBehaviour:
   _rollingRadius: 0.3
   _onSlotAssignedChannel: {fileID: 11400000, guid: eb63d6d559ba04f4aa0211cb09f4a9d3, type: 2}
   _onFruitReachedHolderChannel: {fileID: 11400000, guid: 2a70b3484e8001c4f9d888024c08cd41, type: 2}
+  _jumpHeight: 2
+  _lastStepDuration: 0.5
   _smokeTrailPrefab: {fileID: 8656522925564163052, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+  _smokeStartSize: 0.2
+  _smokeStartSpeed: 0
+  _smokeStartLifetime: 0.4
+  _smokeEmissionRate: 40
