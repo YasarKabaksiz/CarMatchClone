@@ -214,6 +214,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &6149163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,13 +340,14 @@ MonoBehaviour:
   _onRetryRequestedChannel: {fileID: 11400000, guid: 1c8449fc1c03c8b4b85f7577d7c26137, type: 2}
   _debugLogging: 0
   _levels:
-  - {fileID: 11400000, guid: 0ae83593956ff1745a50f861751b6fdc, type: 2}
-  - {fileID: 11400000, guid: d8666a48e76b5b64986efc3014373b94, type: 2}
   - {fileID: 11400000, guid: 1be6316447d3c734a8ab0c7116f7183a, type: 2}
+  - {fileID: 11400000, guid: d8666a48e76b5b64986efc3014373b94, type: 2}
+  - {fileID: 11400000, guid: f5801b2a45fff4c4c90174050d649e9e, type: 2}
   - {fileID: 11400000, guid: ebb9354bd64399f40bf93e1c4da33072, type: 2}
   - {fileID: 11400000, guid: 1cf048be830733640bd91b155e55a79f, type: 2}
   - {fileID: 11400000, guid: 4f6434cb1aafc2745a6729245153df69, type: 2}
   - {fileID: 11400000, guid: 3fddf422d91abb141ac9c3d77031dd92, type: 2}
+  - {fileID: 11400000, guid: 0ae83593956ff1745a50f861751b6fdc, type: 2}
   _levelCoinReward: 20
   _board: {fileID: 551604615}
   _holder: {fileID: 1910141176}
@@ -838,6 +851,264 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 169156523}
   m_CullTransparentMesh: 1
+--- !u!1 &195763895
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 195763898}
+  - component: {fileID: 195763897}
+  - component: {fileID: 195763896}
+  - component: {fileID: 195763899}
+  m_Layer: 0
+  m_Name: --AudioManager--
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &195763896
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195763895}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &195763897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195763895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc4945d12903d674684af8e7fff74dec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarMatchClone.Core.AudioManager
+  _sfxSource: {fileID: 195763896}
+  _musicSource: {fileID: 195763899}
+  _onFruitSelectedChannel: {fileID: 11400000, guid: 2c8d332991af0cb40965c8c25f9a3726, type: 2}
+  _onMatchOccurredChannel: {fileID: 11400000, guid: 1e920084f4019dd4897dbe1f93aae656, type: 2}
+  _onBoosterUsedChannel: {fileID: 11400000, guid: 0920ee7dd98fbb943862c34783b19c39, type: 2}
+  _onLevelCompleteChannel: {fileID: 11400000, guid: 153964fee8aeabf40b3c2d78f1a8d91c, type: 2}
+  _onGameOverChannel: {fileID: 11400000, guid: eee5c3719b03b574297a7e5fad7b95e6, type: 2}
+  _fruitSelectedSounds:
+  - {fileID: 8300000, guid: c8585750f3409534d9c5561381d61fba, type: 3}
+  - {fileID: 8300000, guid: cef80cef55ab9eb4eae023ba74052ef5, type: 3}
+  - {fileID: 8300000, guid: 34c2f14576c56db48b4f0442e10b5b53, type: 3}
+  _matchSounds:
+  - {fileID: 8300000, guid: 06904bdc9bfd3b445a8626f5c56d30fa, type: 3}
+  - {fileID: 8300000, guid: 9a95dfab7dc051348b8580bbc5fcc463, type: 3}
+  _boosterSound: {fileID: 8300000, guid: 3a056c82deb8e0b4e9332b0ced306b98, type: 3}
+  _levelCompleteSound: {fileID: 8300000, guid: 4516cad55934c7b4aa99f58a3c0e4f32, type: 3}
+  _gameOverSound: {fileID: 8300000, guid: d78b4d3a9c5b4e14ca33b304afb56fc2, type: 3}
+  _uiClickSound: {fileID: 8300000, guid: 61c518489e23aed409fd8eea0d4ee7a2, type: 3}
+--- !u!4 &195763898
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195763895}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.09937, y: -0, z: -8.07788}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &195763899
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195763895}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 283136d5ec9f0064483e90019db4cd11, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 0.1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &199298210
 GameObject:
   m_ObjectHideFlags: 0
@@ -1927,6 +2198,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &533639002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2051,6 +2334,18 @@ MonoBehaviour:
       - m_Target: {fileID: 994876310}
         m_TargetAssemblyTypeName: CarMatchClone.UI.GameOverPopup, Assembly-CSharp
         m_MethodName: OnMainMenuClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5118,7 +5413,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1368209358}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1368209358
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6075,7 +6382,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1535195004}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1535195004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6330,7 +6649,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1706271903}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1706271903
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7209,7 +7540,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1945997746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7797,7 +8128,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2138196887}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 195763897}
+        m_TargetAssemblyTypeName: CarMatchClone.Core.AudioManager, Assembly-CSharp
+        m_MethodName: PlayUIClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2138196887
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10368,6 +10711,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 11102825}
   - {fileID: 221168565}
+  - {fileID: 195763898}
   - {fileID: 670052068}
   - {fileID: 330585546}
   - {fileID: 1871511106}

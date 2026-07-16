@@ -16,6 +16,9 @@ namespace CarMatchClone.Gameplay
         [SerializeField] private float _jumpHeight        = 0.4f;
         [SerializeField] private float _lastStepDuration  = 0.25f;
 
+        [Header("Hareket Sesi")]
+        [SerializeField] private AudioSource _rollSound;
+
         [Header("Hareket VFX")]
         [SerializeField] private GameObject _smokeTrailPrefab;
         [SerializeField] private float _smokeStartSize     = 0.15f;
@@ -55,6 +58,7 @@ namespace CarMatchClone.Gameplay
 
         private void OnDisable()
         {
+            _rollSound?.Stop();
             _onSlotAssignedChannel?.Unsubscribe(HandleSlotAssigned);
             _sequence?.Kill();
             _sequence = null;
@@ -70,6 +74,8 @@ namespace CarMatchClone.Gameplay
         private void HandleSlotAssigned(SlotAssignedPayload payload)
         {
             if (payload.Fruit != _fruit) return;
+
+            _rollSound?.Play();
 
             if (_smokeTrailPrefab != null)
             {
@@ -143,6 +149,7 @@ namespace CarMatchClone.Gameplay
 
             _sequence.OnComplete(() =>
             {
+                _rollSound?.Stop();
                 _jumpYOffset = 0f;
                 if (_activeSmokeTrail != null)
                 {
